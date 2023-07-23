@@ -1,0 +1,33 @@
+---
+- hosts: localhost
+  name: Development environment setup
+  tasks:
+    - name: Core
+      ansible.builtin.import_tasks: ./tasks/core.yml
+
+    - name: Rust
+      ansible.builtin.import_tasks: ./tasks/rust.yml
+
+    - name: Node
+      ansible.builtin.import_tasks: ./tasks/node.yml
+
+    - name: Fonts
+      ansible.builtin.import_tasks: ./tasks/fonts.yml
+
+    - name: I3
+      ansible.builtin.import_tasks: ./tasks/i3.yml
+
+    - name: Alacritty
+      ansible.builtin.import_tasks: ./tasks/alacritty.yml
+
+    - name: Zsh
+      ansible.builtin.import_tasks: ./tasks/zsh.yml
+
+    - name: Fzf
+      ansible.builtin.import_tasks: ./tasks/fzf.yml
+
+    - name: Tmux
+      ansible.builtin.import_tasks: ./tasks/tmux.yml
+
+    - name: Neovim
+      ansible.builtin.import_tasks: ./tasks/neovim.yml

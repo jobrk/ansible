@@ -1,0 +1,17 @@
+---
+- name: Check that ~/.cargo exists
+  ansible.builtin.stat:
+    path: ~/.cargo
+  register: cargo
+
+- name: Download rust installer
+  ansible.builtin.get_url:
+    url: https://sh.rustup.rs
+    dest: ~/.rustup-installer
+    mode: "0755"
+  when: not cargo.stat.exists
+
+- name: Install rust
+  ansible.builtin.command: ~/.rustup-installer -y
+  when: not cargo.stat.exists
+  changed_when: not cargo.stat.exists

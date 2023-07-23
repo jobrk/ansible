@@ -1,0 +1,21 @@
+---
+- name: Copy .dmrc file
+  tags: ui
+  ansible.builtin.copy:
+    src: ../configs/dmrc
+    dest: ~/.dmrc
+    mode: "0644"
+
+- name: Create ~/.config/i3 if it does not exist
+  tags: ui
+  ansible.builtin.file:
+    path: ~/.config/i3
+    state: directory
+    mode: "0755"
+
+- name: Copy .i3 file
+  tags: ui
+  ansible.builtin.copy:
+    src: ../configs/i3
+    dest: ~/.config/i3/config
+    mode: "0644"

@@ -1,0 +1,29 @@
+---
+- name: Create ~/.fonts if it does not exist
+  tags: ui
+  ansible.builtin.file:
+    path: ~/.fonts
+    state: directory
+    mode: "0755"
+
+- name: Create temporary nerd-fonts directory
+  tags: ui
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: build
+  register: nerdfonts
+
+- name: Clone nerd-fonts # noqa: latest
+  tags: ui
+  ansible.builtin.git:
+    repo: https://github.com/ryanoasis/nerd-fonts.git
+    dest: "{{ nerdfonts.path }}"
+    depth: 1
+
+- name: Copy JetBrainsMono Nerd Font
+  tags: ui
+  ansible.builtin.copy:
+    src: "{{ nerdfonts.path }}/patched-fonts/JetBrainsMono"
+    dest: ~/.fonts
+    mode: "0755"
+    remote_src: true

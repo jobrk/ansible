@@ -1,0 +1,69 @@
+---
+- name: Install core packages with apt
+  become: true
+  tags: become
+  when: ansible_os_family == 'Debian'
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - cmake
+      - curl
+      - gettext
+      - git-all
+      - ninja-build
+      - nodejs
+      - npm
+      - pkg-config
+      - tmux
+      - unzip
+      - zsh
+
+- name: Install core UI packages with apt
+  become: true
+  tags:
+    - become
+    - ui
+  when: ansible_os_family == 'Debian'
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - dmenu
+      - i3
+      - libfontconfig1-dev
+      - pkg-config
+
+- name: Install core packages with yum
+  become: true
+  tags: become
+  when: ansible_os_family == 'RedHat'
+  ansible.builtin.yum:
+    update_cache: true
+    name:
+      - cmake
+      - curl
+      - gettext
+      - gcc
+      - git
+      - make
+      - nodejs
+      - tmux
+      - unzip
+      - zsh
+
+- name: Install core UI packages with yum
+  become: true
+  tags:
+    - become
+    - ui
+  when: ansible_os_family == 'RedHat'
+  ansible.builtin.yum:
+    update_cache: true
+    name:
+      - dmenu
+      - fontconfig-devel
+      - freetype-devel
+      - g++
+      - i3
+      - libxcb-devel
+      - libxkbcommon-devel
+      - pkg-config

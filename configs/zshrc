@@ -1,0 +1,42 @@
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+export ZSH="$HOME/.oh-my-zsh"
+
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+plugins=(git tmux zsh-autosuggestions zsh-syntax-highlighting)
+
+source $ZSH/oh-my-zsh.sh
+
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+[[ ! -f ~/.fzf.zsh ]] || source ~/.fzf.zsh
+
+export PATH=~/.local/nvim/bin:~/.local/npm-packages/bin:~/.local/bin:$PATH
+
+export N_PREFIX=~/.local
+
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#363a4f,bg:#24273a,spinner:#f4dbd6,hl:#ed8796 \
+--color=fg:#cad3f5,header:#ed8796,info:#c6a0f6,pointer:#f4dbd6 \
+--color=marker:#f4dbd6,fg+:#cad3f5,prompt:#c6a0f6,hl+:#ed8796"
+
+export EDITOR=nvim
+export VISUAL=nvim
+
+alias y="yarn"
+alias t="y tsc --noEmit"
+alias tw="t -w"
+alias gch="git checkout"
+alias ga="git add"
+alias gd="git diff"
+alias gs="git status --short"
+alias gp="git pull"
+alias gcm="git commit -m"
+alias gca="git commit --amend --no-edit"
+alias gb="git branch"
+alias gpu="git branch --show-current | xargs git push --set-upstream origin"
+alias prof="nvim ~/.zshrc"
+alias viprof="nvim ~/.config/nvim"
+alias vi="nvim"

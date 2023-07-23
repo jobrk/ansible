@@ -1,0 +1,24 @@
+---
+- name: Create ~/.local/npm-packages if it does not exist
+  ansible.builtin.file:
+    path: ~/.local/npm-packages
+    state: directory
+    mode: "0755"
+
+- name: Configure npm prefix
+  ansible.builtin.command: npm config set prefix '~/.local/npm-packages'
+  changed_when: true
+
+- name: Install N
+  community.general.npm:
+    name: n
+    global: true
+
+- name: Install lastest node LTS # noqa: command-instead-of-shell
+  ansible.builtin.shell: N_PREFIX=~/.local ~/.local/npm-packages/bin/n lts
+  changed_when: true
+
+- name: Install yarn
+  community.general.npm:
+    name: yarn
+    global: true

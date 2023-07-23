@@ -1,0 +1,28 @@
+---
+- name: Copy .tmux.conf file
+  ansible.builtin.copy:
+    src: ../configs/tmux.conf
+    dest: ~/.tmux.conf
+    mode: "0644"
+
+- name: Install TPM # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: ~/.tmux/plugins/tpm
+    depth: 1
+
+- name: Install tmux plugins
+  ansible.builtin.command: ~/.tmux/plugins/tpm/bin/install_plugins
+  changed_when: true
+
+- name: Create a ~/.local/bin if it does not exist
+  ansible.builtin.file:
+    path: ~/.local/bin
+    state: directory
+    mode: "0755"
+
+- name: Install tmux-sessionizer
+  ansible.builtin.copy:
+    src: ../configs/tmux-sessionizer
+    dest: ~/.local/bin/tmux-sessionizer
+    mode: "0755"

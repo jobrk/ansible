@@ -1,0 +1,72 @@
+---
+- name: Create temporary Neovim build directory
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: build
+  register: neobuild
+
+- name: Clone Neovim # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/neovim/neovim
+    dest: "{{ neobuild.path }}"
+    depth: 1
+    version: stable
+
+- name: Compile Neovim
+  ansible.builtin.command: make -j 20 CMAKE_BUILD_TYPE=Release CMAKE_INSTALL_PREFIX=~/.local/nvim
+  args:
+    chdir: "{{ neobuild.path }}"
+  changed_when: true
+
+- name: Install Neovim
+  ansible.builtin.command: make install
+  args:
+    chdir: "{{ neobuild.path }}"
+  changed_when: true
+
+- name: Install Packer # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/wbthomason/packer.nvim
+    dest: ~/.local/share/nvim/site/pack/packer/start/packer.nvim
+    depth: 1
+
+- name: Clone neovim config # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/jobrk/neovim-config.git
+    dest: ~/.config/nvim
+    depth: 1
+    version: coc-reborn
+
+- name: Install neovim plugins
+  ansible.builtin.command: ~/.local/nvim/bin/nvim \
+    --noplugin \
+    --headless \
+    -u ~/.config/nvim/lua/jbrooks/packer.lua \
+    -c "autocmd User PackerComplete quitall" \
+    -c "PackerSync"
+  changed_when: true
+
+- name: Install coc plugins
+  ansible.builtin.shell: PATH=~/.local/bin:$PATH ~/.local/nvim/bin/nvim \
+    --headless \
+    -c "CocInstall -sync \
+        coc-db \
+        coc-eslint \
+        coc-git \
+        coc-json \
+        coc-pairs \
+        coc-prettier \
+        coc-rust-analyser \
+        coc-snippets \
+        coc-sumneko-lua \
+        coc-tsserver" \
+    -c "quitall"
+  changed_when: true
+
+# Blocked by https://github.com/nvim-treesitter/nvim-treesitter/issues/2900
+# - name: Install treesitter plugins
+#   ansible.builtin.shell: PATH=~/.local/bin:$PATH ~/.local/nvim/bin/nvim \
+#     --headless \
+#     -c "TSUpdateSync" \
+#     -c "quitall"
+#   changed_when: true

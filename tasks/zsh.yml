@@ -1,0 +1,54 @@
+---
+- name: Set Zsh as default shell
+  become: true
+  tags: become
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: /bin/zsh
+
+- name: Check that ~/.oh-my-zsh exists
+  ansible.builtin.stat:
+    path: ~/.oh-my-zsh
+  register: oh_my_zsh
+
+- name: Download oh-my-zsh installer
+  ansible.builtin.get_url:
+    url: https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh
+    dest: ~/.oh-my-installer
+    mode: "0755"
+  when: not oh_my_zsh.stat.exists
+
+- name: Run .oh-my-installer
+  ansible.builtin.command: ~/.oh-my-installer --unattended
+  when: not oh_my_zsh.stat.exists
+  changed_when: not oh_my_zsh.stat.exists
+
+- name: Install zsh-autosuggestions # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions
+    dest: ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+    depth: 1
+
+- name: Install zsh-syntax-highlighting  # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    dest: ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+    depth: 1
+
+- name: Install powerlevel10k  # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: ~/.oh-my-zsh/custom/themes/powerlevel10k
+    depth: 1
+
+- name: Copy .zshrc file
+  ansible.builtin.copy:
+    src: ../configs/zshrc
+    dest: ~/.zshrc
+    mode: "0644"
+
+- name: Copy .p10k.zsh file
+  ansible.builtin.copy:
+    src: ../configs/p10k.zsh
+    dest: ~/.p10k.zsh
+    mode: "0644"

@@ -1,0 +1,10 @@
+---
+- name: Clone fzf  # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/junegunn/fzf.git
+    dest: ~/.local/fzf
+    depth: 1
+
+- name: Install fzf
+  ansible.builtin.command: ~/.local/fzf/install --key-bindings --completion --no-update-rc
+  changed_when: true
