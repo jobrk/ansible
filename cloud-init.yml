@@ -1,0 +1,12 @@
+#cloud-config
+users:
+  - name: josh
+    groups: sudo
+    shell: /bin/zsh
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_import_id: gh:jobrk
+package_update: true
+packages:
+  - curl
+runcmd:
+  - su - josh -c 'curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | bash'
