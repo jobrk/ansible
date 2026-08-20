@@ -1,0 +1,31 @@
+---
+core_packages:
+  - bat
+  - build-essential
+  - cmake
+  - curl
+  - direnv
+  - fd-find
+  - fzf
+  - git
+  - git-delta
+  - jq
+  - libfontconfig1-dev
+  - libfreetype-dev
+  - libxcb-xfixes0-dev
+  - libxkbcommon-dev
+  - pkg-config
+  - ripgrep
+  - stow
+  - tmux
+  - unzip
+  - zsh
+
+ui_packages:
+  - dmenu
+  - i3
+
+# Debian installs bat as batcat and fd as fdfind
+binary_symlinks:
+  - { src: /usr/bin/batcat, dest: ~/.local/bin/bat }
+  - { src: /usr/bin/fdfind, dest: ~/.local/bin/fd }

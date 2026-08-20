@@ -1,0 +1,30 @@
+---
+core_packages:
+  - bat
+  - cmake
+  - curl
+  - direnv
+  - fd-find
+  - fzf
+  - g++
+  - gcc
+  - git
+  - git-delta
+  - jq
+  - fontconfig-devel
+  - freetype-devel
+  - libxcb-devel
+  - libxkbcommon-devel
+  - make
+  - pkg-config
+  - ripgrep
+  - stow
+  - tmux
+  - unzip
+  - zsh
+
+ui_packages:
+  - dmenu
+  - i3
+
+binary_symlinks: []

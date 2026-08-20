@@ -1,4 +1,4 @@
-FROM debian:12 AS base
+FROM debian:13 AS base
 WORKDIR /usr/local/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
@@ -14,10 +14,12 @@ RUN echo "jobrk ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/jobrk
 USER jobrk
 WORKDIR /home/jobrk
 
-FROM jobrk 
+FROM jobrk
 RUN pipx install --include-deps ansible
-COPY . ./ansible
+COPY --chown=jobrk . ./ansible
+# Run twice: second run must report changed=0 (idempotency gate)
 RUN ./.local/bin/ansible-playbook ./ansible/main.yml
-ENV TERM xterm-256color
+RUN ./.local/bin/ansible-playbook ./ansible/main.yml | tee /tmp/second-run.log && \
+    grep -E 'changed=0.*failed=0' /tmp/second-run.log
+ENV TERM=xterm-256color
 CMD ["/bin/zsh"]
-

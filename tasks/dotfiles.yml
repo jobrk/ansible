@@ -1,0 +1,13 @@
+---
+- name: Clone dotfiles  # noqa: latest
+  ansible.builtin.git:
+    repo: https://github.com/jobrk/dotfiles
+    dest: ~/dotfiles
+    recursive: true
+    update: false
+
+- name: Stow dotfiles
+  ansible.builtin.command: ./install.sh
+  args:
+    chdir: ~/dotfiles
+    creates: ~/.zshrc

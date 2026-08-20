@@ -1,24 +1,16 @@
 ---
-- name: Create ~/.local/npm-packages if it does not exist
-  ansible.builtin.file:
-    path: ~/.local/npm-packages
-    state: directory
-    mode: "0755"
+- name: Check for fnm
+  ansible.builtin.stat:
+    path: ~/.local/share/fnm/fnm
+  register: fnm_binary
 
-- name: Configure npm prefix
-  ansible.builtin.command: npm config set prefix '~/.local/npm-packages'
-  changed_when: true
+- name: Install fnm
+  ansible.builtin.shell: |
+    curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
+  when: not fnm_binary.stat.exists
+  changed_when: not fnm_binary.stat.exists
 
-- name: Install N
-  community.general.npm:
-    name: n
-    global: true
-
-- name: Install lastest node LTS # noqa: command-instead-of-shell
-  ansible.builtin.shell: N_PREFIX=~/.local ~/.local/npm-packages/bin/n lts
-  changed_when: true
-
-- name: Install yarn
-  community.general.npm:
-    name: yarn
-    global: true
+- name: Install latest LTS node
+  ansible.builtin.command: ~/.local/share/fnm/fnm install --lts
+  register: fnm_install
+  changed_when: "'already installed' not in fnm_install.stderr"

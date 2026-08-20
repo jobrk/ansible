@@ -1,0 +1,72 @@
+---
+- name: Install core packages (apt)
+  become: true
+  tags: become
+  when: ansible_os_family == 'Debian'
+  ansible.builtin.apt:
+    update_cache: true
+    name: "{{ core_packages }}"
+
+- name: Install UI packages (apt)
+  become: true
+  tags:
+    - become
+    - ui
+  when: ansible_os_family == 'Debian'
+  ansible.builtin.apt:
+    name: "{{ ui_packages }}"
+
+- name: Install core packages (dnf)
+  become: true
+  tags: become
+  when: ansible_os_family == 'RedHat'
+  ansible.builtin.dnf:
+    update_cache: true
+    name: "{{ core_packages }}"
+
+- name: Install UI packages (dnf)
+  become: true
+  tags:
+    - become
+    - ui
+  when: ansible_os_family == 'RedHat'
+  ansible.builtin.dnf:
+    name: "{{ ui_packages }}"
+
+- name: Install core packages (homebrew)
+  when: ansible_os_family == 'Darwin'
+  community.general.homebrew:
+    update_homebrew: true
+    name: "{{ core_packages }}"
+
+- name: Install cask packages (homebrew)
+  when: ansible_os_family == 'Darwin'
+  tags: ui
+  community.general.homebrew_cask:
+    name: "{{ cask_packages }}"
+
+- name: Create ~/.local/bin
+  ansible.builtin.file:
+    path: ~/.local/bin
+    state: directory
+    mode: "0755"
+
+- name: Symlink renamed distro binaries (bat/fd on Debian)
+  ansible.builtin.file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  loop: "{{ binary_symlinks }}"
+
+- name: Check for git-absorb (Linux — no distro package)
+  when: ansible_system == 'Linux'
+  ansible.builtin.stat:
+    path: ~/.cargo/bin/git-absorb
+  register: git_absorb_binary
+  tags: rust
+
+- name: Install git-absorb via cargo (Linux)
+  when: ansible_system == 'Linux' and not git_absorb_binary.stat.exists
+  ansible.builtin.command: ~/.cargo/bin/cargo install git-absorb
+  changed_when: true
+  tags: rust

@@ -1,0 +1,24 @@
+---
+homebrew_prefix: "{{ '/opt/homebrew' if ansible_architecture == 'arm64' else '/usr/local' }}"
+
+core_packages:
+  - bat
+  - direnv
+  - fd
+  - fzf
+  - git
+  - git-absorb
+  - git-delta
+  - jq
+  - neovim
+  - ripgrep
+  - stow
+  - tmux
+  - zsh
+
+cask_packages:
+  - alacritty
+  - font-iosevka-term-nerd-font
+
+ui_packages: []
+binary_symlinks: []

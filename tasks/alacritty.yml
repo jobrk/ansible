@@ -1,19 +1,14 @@
 ---
-- name: Install alacritty
-  tags: ui
+# Darwin: cask in packages.yml. Linux: build via cargo (no reliable distro pkg).
+- name: Check for alacritty (Linux)
+  when: ansible_system == 'Linux'
+  ansible.builtin.stat:
+    path: ~/.cargo/bin/alacritty
+  register: alacritty_binary
+  tags: rust
+
+- name: Install alacritty via cargo (Linux)
+  when: ansible_system == 'Linux' and not alacritty_binary.stat.exists
   ansible.builtin.command: ~/.cargo/bin/cargo install alacritty
   changed_when: true
-
-- name: Create ~/.config/alacritty if it does not exist
-  tags: ui
-  ansible.builtin.file:
-    path: ~/.config/alacritty
-    state: directory
-    mode: "0755"
-
-- name: Copy alacritty.yml
-  tags: ui
-  ansible.builtin.copy:
-    src: ../configs/alacritty.yml
-    dest: ~/.config/alacritty/alacritty.yml
-    mode: "0644"
+  tags: rust

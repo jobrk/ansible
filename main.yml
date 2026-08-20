@@ -1,33 +1,63 @@
 ---
-- hosts: localhost
-  name: Development environment setup
+- name: Development environment setup
+  hosts: localhost
+  connection: local
+  vars_files:
+    - vars/{{ ansible_os_family }}.yml
   tasks:
-    - name: Core
-      ansible.builtin.import_tasks: ./tasks/core.yml
+    - name: Homebrew bootstrap (macOS)
+      ansible.builtin.import_tasks: tasks/homebrew.yml
+      when: ansible_system == 'Darwin'
+
+    - name: Packages
+      ansible.builtin.import_tasks: tasks/packages.yml
 
     - name: Rust
-      ansible.builtin.import_tasks: ./tasks/rust.yml
+      ansible.builtin.import_tasks: tasks/rust.yml
+      tags: rust
 
     - name: Node
-      ansible.builtin.import_tasks: ./tasks/node.yml
-
-    - name: Fonts
-      ansible.builtin.import_tasks: ./tasks/fonts.yml
-
-    - name: I3
-      ansible.builtin.import_tasks: ./tasks/i3.yml
-
-    - name: Alacritty
-      ansible.builtin.import_tasks: ./tasks/alacritty.yml
+      ansible.builtin.import_tasks: tasks/node.yml
+      tags: node
 
     - name: Zsh
-      ansible.builtin.import_tasks: ./tasks/zsh.yml
-
-    - name: Fzf
-      ansible.builtin.import_tasks: ./tasks/fzf.yml
-
-    - name: Tmux
-      ansible.builtin.import_tasks: ./tasks/tmux.yml
+      ansible.builtin.import_tasks: tasks/zsh.yml
+      tags: zsh
 
     - name: Neovim
-      ansible.builtin.import_tasks: ./tasks/neovim.yml
+      ansible.builtin.import_tasks: tasks/neovim.yml
+      tags: neovim
+
+    - name: Fonts
+      ansible.builtin.import_tasks: tasks/fonts.yml
+      tags: ui
+
+    - name: Alacritty
+      ansible.builtin.import_tasks: tasks/alacritty.yml
+      tags: ui
+
+    - name: I3 (Linux)
+      ansible.builtin.import_tasks: tasks/i3.yml
+      when: ansible_system == 'Linux'
+      tags: ui
+
+    - name: MacOS extras
+      ansible.builtin.import_tasks: tasks/macos.yml
+      when: ansible_system == 'Darwin'
+      tags: ui
+
+    - name: Tmux
+      ansible.builtin.import_tasks: tasks/tmux.yml
+      tags: tmux
+
+    - name: Dotfiles
+      ansible.builtin.import_tasks: tasks/dotfiles.yml
+      tags: dotfiles
+
+    - name: Machine-local templates
+      ansible.builtin.import_tasks: tasks/templates.yml
+      tags: dotfiles
+
+    - name: Secrets
+      ansible.builtin.import_tasks: tasks/secrets.yml
+      tags: secrets
