@@ -46,13 +46,14 @@
       when: ansible_system == 'Darwin'
       tags: ui
 
-    - name: Tmux
-      ansible.builtin.import_tasks: tasks/tmux.yml
-      tags: tmux
-
     - name: Dotfiles
       ansible.builtin.import_tasks: tasks/dotfiles.yml
       tags: dotfiles
+
+    # After dotfiles: tpm's install_plugins reads the stowed ~/.tmux.conf
+    - name: Tmux
+      ansible.builtin.import_tasks: tasks/tmux.yml
+      tags: tmux
 
     - name: Machine-local templates
       ansible.builtin.import_tasks: tasks/templates.yml

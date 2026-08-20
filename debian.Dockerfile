@@ -3,7 +3,7 @@ WORKDIR /usr/local/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y build-essential curl git pipx software-properties-common sudo && \
+    apt-get install -y build-essential curl git pipx sudo && \
     apt-get clean autoclean && \
     apt-get autoremove --yes
 

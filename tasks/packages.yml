@@ -58,15 +58,3 @@
     state: link
   loop: "{{ binary_symlinks }}"
 
-- name: Check for git-absorb (Linux — no distro package)
-  when: ansible_system == 'Linux'
-  ansible.builtin.stat:
-    path: ~/.cargo/bin/git-absorb
-  register: git_absorb_binary
-  tags: rust
-
-- name: Install git-absorb via cargo (Linux)
-  when: ansible_system == 'Linux' and not git_absorb_binary.stat.exists
-  ansible.builtin.command: ~/.cargo/bin/cargo install git-absorb
-  changed_when: true
-  tags: rust
