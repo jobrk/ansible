@@ -50,7 +50,6 @@
       ansible.builtin.import_tasks: tasks/dotfiles.yml
       tags: dotfiles
 
-    # After dotfiles: tpm's install_plugins reads the stowed ~/.tmux.conf
     - name: Tmux
       ansible.builtin.import_tasks: tasks/tmux.yml
       tags: tmux

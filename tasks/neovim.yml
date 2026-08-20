@@ -1,8 +1,4 @@
 ---
-# Linux: distro repos lag badly (Ubuntu LTS ships 0.6-0.11; config needs 0.12+),
-# so install the upstream release tarball. macOS: brew formula tracks stable.
-# Upgrade an existing install with: ansible-playbook main.yml -e nvim_force=true
-
 - name: Check for neovim (Linux)
   when: ansible_system == 'Linux'
   ansible.builtin.stat:
@@ -31,9 +27,6 @@
         src: ~/.local/nvim/bin/nvim
         dest: ~/.local/bin/nvim
         state: link
-
-# Config arrives via the dotfiles nvim submodule (stowed); plugins bootstrap
-# on first launch (lazy.nvim). No headless sync here by design.
 
 - name: Enable stylua pre-commit hook in nvim config
   ansible.builtin.command: git config core.hooksPath .githooks

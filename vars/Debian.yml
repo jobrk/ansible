@@ -25,7 +25,6 @@ ui_packages:
   - dmenu
   - i3
 
-# Debian installs bat as batcat and fd as fdfind
 binary_symlinks:
   - { src: /usr/bin/batcat, dest: ~/.local/bin/bat }
   - { src: /usr/bin/fdfind, dest: ~/.local/bin/fd }

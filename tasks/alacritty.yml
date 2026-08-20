@@ -1,5 +1,4 @@
 ---
-# Darwin: cask in packages.yml. Linux: build via cargo (no reliable distro pkg).
 - name: Check for alacritty (Linux)
   when: ansible_system == 'Linux'
   ansible.builtin.stat:

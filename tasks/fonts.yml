@@ -1,5 +1,4 @@
 ---
-# Darwin gets font-iosevka-term-nerd-font via cask (packages.yml).
 - name: Install Iosevka Term Nerd Font (Linux)
   when: ansible_system == 'Linux'
   block:

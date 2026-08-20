@@ -14,7 +14,6 @@ WORKDIR /home/jobrk
 FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
-# Run twice: second run must report changed=0 (idempotency gate)
 RUN ./.local/bin/ansible-playbook ./ansible/main.yml
 RUN ./.local/bin/ansible-playbook ./ansible/main.yml | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log

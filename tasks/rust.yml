@@ -21,7 +21,6 @@
     path: ~/.rustup-installer
     state: absent
 
-# No distro package on Linux; brew handles it on macOS (packages.yml)
 - name: Check for git-absorb (Linux)
   when: ansible_system == 'Linux'
   ansible.builtin.stat:

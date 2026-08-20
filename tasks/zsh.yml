@@ -40,7 +40,6 @@
     - { repo: Aloxaf/fzf-tab, dest: plugins/fzf-tab }
     - { repo: romkatv/powerlevel10k, dest: themes/powerlevel10k }
 
-# fzf >= 0.48 generates its own zsh bindings; ~/.fzf.zsh is sourced by .zshrc
 - name: Install fzf shell integration
   ansible.builtin.shell: fzf --zsh > ~/.fzf.zsh
   args:

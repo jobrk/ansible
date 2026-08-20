@@ -8,7 +8,6 @@
     - ~/.config/alacritty
     - ~/.config/sessionizer
 
-# force: false — seed once, never overwrite a machine's real local config
 - name: Seed machine-local files from dotfiles templates
   ansible.builtin.copy:
     src: "~/dotfiles/templates/{{ item.src }}"
