@@ -56,8 +56,8 @@ ansible-vault encrypt vars/secrets.yml
 ansible-playbook main.yml --ask-vault-pass
 ```
 
-Writes `~/.zsh_secrets` (0600), sourced by the dotfiles zshrc. Without a
-vault the step is skipped and `~/.zsh_secrets` can be managed by hand.
+Writes `~/.config/zsh/secrets.zsh` (0600), sourced by the dotfiles zshrc.
+Without a vault the step is skipped and the file can be managed by hand.
 
 ## After the playbook
 

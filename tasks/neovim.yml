@@ -29,9 +29,10 @@
         state: link
 
 - name: Enable stylua pre-commit hook in nvim config
-  ansible.builtin.command: git config core.hooksPath .githooks
-  args:
-    chdir: ~/dotfiles/nvim/.config/nvim
-  changed_when: false
+  community.general.git_config:
+    name: core.hooksPath
+    value: .githooks
+    scope: local
+    repo: "{{ dotfiles_dest }}/nvim/.config/nvim"
   failed_when: false
   tags: dotfiles

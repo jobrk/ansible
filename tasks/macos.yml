@@ -1,4 +1,9 @@
 ---
+- name: Add skhd and yabai Homebrew tap
+  community.general.homebrew_tap:
+    name: koekeishiya/formulae
+    state: present
+
 - name: Install skhd and yabai
   community.general.homebrew:
     name:
@@ -8,14 +13,14 @@
 - name: Fast key repeat
   community.general.osx_defaults:
     key: KeyRepeat
-    type: int
-    value: 2
+    type: float
+    value: 2.0
 
 - name: Short delay until key repeat
   community.general.osx_defaults:
     key: InitialKeyRepeat
-    type: int
-    value: 15
+    type: float
+    value: 15.0
 
 - name: Disable press-and-hold accent popup (repeat keys instead)
   community.general.osx_defaults:

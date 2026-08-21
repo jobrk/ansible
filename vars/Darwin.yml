@@ -5,6 +5,7 @@ core_packages:
   - bat
   - direnv
   - fd
+  - fnm
   - fzf
   - git
   - git-absorb
@@ -13,6 +14,7 @@ core_packages:
   - neovim
   - ripgrep
   - stow
+  - stylua
   - tmux
   - zsh
 

@@ -57,4 +57,3 @@
     dest: "{{ item.dest }}"
     state: link
   loop: "{{ binary_symlinks }}"
-

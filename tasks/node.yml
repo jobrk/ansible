@@ -1,16 +1,30 @@
 ---
 - name: Check for fnm
-  ansible.builtin.stat:
-    path: ~/.local/share/fnm/fnm
-  register: fnm_binary
+  ansible.builtin.command: fnm --version
+  register: fnm_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Download fnm installer
+  ansible.builtin.get_url:
+    url: https://fnm.vercel.app/install
+    dest: ~/.fnm-installer
+    mode: "0755"
+  when: fnm_check.rc != 0
 
 - name: Install fnm
-  ansible.builtin.shell: |
-    curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
-  when: not fnm_binary.stat.exists
-  changed_when: not fnm_binary.stat.exists
+  ansible.builtin.command: ~/.fnm-installer --skip-shell
+  when: fnm_check.rc != 0
+  changed_when: true
+
+- name: Remove fnm installer
+  ansible.builtin.file:
+    path: ~/.fnm-installer
+    state: absent
 
 - name: Install latest LTS node
-  ansible.builtin.command: ~/.local/share/fnm/fnm install --lts
+  ansible.builtin.command: >-
+    {{ 'fnm' if fnm_check.rc == 0 else lookup('env', 'HOME') ~ '/.local/share/fnm/fnm' }} install --lts
   register: fnm_install
   changed_when: "'already installed' not in fnm_install.stderr"

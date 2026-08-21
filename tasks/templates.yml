@@ -10,7 +10,7 @@
 
 - name: Seed machine-local files from dotfiles templates
   ansible.builtin.copy:
-    src: "~/dotfiles/templates/{{ item.src }}"
+    src: "{{ dotfiles_dest }}/templates/{{ item.src }}"
     dest: "{{ item.dest }}"
     force: false
     mode: "0644"

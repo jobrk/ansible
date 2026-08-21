@@ -1,13 +1,20 @@
 ---
+- name: Create dotfiles parent directory
+  ansible.builtin.file:
+    path: "{{ dotfiles_dest | dirname }}"
+    state: directory
+    mode: "0755"
+
 - name: Clone dotfiles  # noqa: latest
   ansible.builtin.git:
     repo: https://github.com/jobrk/dotfiles
-    dest: ~/dotfiles
+    dest: "{{ dotfiles_dest }}"
     recursive: true
     update: false
 
 - name: Stow dotfiles
   ansible.builtin.command: ./install.sh
   args:
-    chdir: ~/dotfiles
-    creates: ~/.zshrc
+    chdir: "{{ dotfiles_dest }}"
+  register: dotfiles_stow
+  changed_when: "'Backed up ' in dotfiles_stow.stdout or 'LINK:' in dotfiles_stow.stderr or 'UNLINK:' in dotfiles_stow.stderr"

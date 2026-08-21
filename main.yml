@@ -2,6 +2,8 @@
 - name: Development environment setup
   hosts: localhost
   connection: local
+  vars:
+    dotfiles_dest: "{{ lookup('env', 'DOTFILES_DEST') or lookup('env', 'HOME') ~ '/projects/dotfiles' }}"
   vars_files:
     - vars/{{ ansible_os_family }}.yml
   tasks:
