@@ -7,11 +7,15 @@ live in dotfiles only — this repo owns machine state, never file content.
 
 ## Usage
 
-One command on any machine (Debian/Ubuntu, Fedora/RHEL, macOS):
+From an interactive shell on any machine (Debian/Ubuntu, Fedora/RHEL, macOS):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | bash
+bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh)
 ```
+
+Process substitution keeps standard input attached to the terminal so Ansible
+can request the sudo password when required. The piped form is suitable only
+for root, passwordless sudo, or another non-interactive environment.
 
 The script installs ansible (pipx/brew, bootstrapping brew on a bare mac),
 clones or updates this repo, and runs the playbook with flags inferred from
@@ -39,7 +43,8 @@ Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
 
 Paste `cloud-init.yml` as user data at droplet creation: makes the user
 (SSH keys imported from GitHub), then runs bootstrap. The machine is
-provisioned before first login. Secrets stay manual by design.
+provisioned before first login. Its piped bootstrap command is safe because the
+created user has passwordless sudo. Secrets stay manual by design.
 
 ## Private repos
 
