@@ -40,7 +40,30 @@
     - { repo: Aloxaf/fzf-tab, dest: plugins/fzf-tab }
     - { repo: romkatv/powerlevel10k, dest: themes/powerlevel10k }
 
+- name: Generate fzf shell integration
+  ansible.builtin.command: fzf --zsh
+  register: fzf_zsh
+  changed_when: false
+  failed_when: false
+
 - name: Install fzf shell integration
-  ansible.builtin.shell: fzf --zsh > ~/.fzf.zsh
-  args:
-    creates: ~/.fzf.zsh
+  ansible.builtin.copy:
+    dest: ~/.fzf.zsh
+    content: "{{ fzf_zsh.stdout }}\n"
+    mode: "0644"
+  when: fzf_zsh.rc == 0
+
+- name: Install packaged fzf shell integration
+  ansible.builtin.copy:
+    dest: ~/.fzf.zsh
+    mode: "0644"
+    content: |
+      for fzf_shell_dir in /usr/share/doc/fzf/examples /usr/share/fzf/shell; do
+        if [[ -r "$fzf_shell_dir/key-bindings.zsh" ]]; then
+          [[ -r "$fzf_shell_dir/completion.zsh" ]] && source "$fzf_shell_dir/completion.zsh"
+          source "$fzf_shell_dir/key-bindings.zsh"
+          break
+        fi
+      done
+      unset fzf_shell_dir
+  when: fzf_zsh.rc != 0
