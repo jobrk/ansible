@@ -1,14 +1,14 @@
 ---
 - name: Check for neovim (Linux)
-  when: ansible_system == 'Linux'
+  when: ansible_facts['system'] == 'Linux'
   ansible.builtin.stat:
     path: ~/.local/nvim/bin/nvim
   register: nvim_binary
 
 - name: Install neovim from release tarball (Linux)
-  when: ansible_system == 'Linux' and (not nvim_binary.stat.exists or nvim_force | default(false))
+  when: ansible_facts['system'] == 'Linux' and (not nvim_binary.stat.exists or nvim_force | default(false))
   vars:
-    nvim_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
+    nvim_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else ansible_facts['architecture'] }}"
   block:
     - name: Download neovim stable tarball
       ansible.builtin.unarchive:

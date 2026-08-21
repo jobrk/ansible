@@ -3,7 +3,7 @@
   become: true
   tags: become
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts['user_id'] }}"
     shell: /bin/zsh
 
 - name: Check for oh-my-zsh

@@ -22,12 +22,12 @@
     state: absent
 
 - name: Check for git-absorb (Linux)
-  when: ansible_system == 'Linux'
+  when: ansible_facts['system'] == 'Linux'
   ansible.builtin.stat:
     path: ~/.cargo/bin/git-absorb
   register: git_absorb_binary
 
 - name: Install git-absorb via cargo (Linux)
-  when: ansible_system == 'Linux' and not git_absorb_binary.stat.exists
+  when: ansible_facts['system'] == 'Linux' and not git_absorb_binary.stat.exists
   ansible.builtin.command: ~/.cargo/bin/cargo install git-absorb
   changed_when: true

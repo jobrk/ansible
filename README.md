@@ -33,7 +33,7 @@ Manual equivalent:
 git clone https://github.com/jobrk/ansible ~/ansible
 cd ~/ansible
 ansible-galaxy collection install -r requirements.yml
-ansible-playbook main.yml -K
+ansible-playbook -i inventory.ini main.yml -K
 ```
 
 Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
@@ -78,5 +78,5 @@ docker build -f debian.Dockerfile .     # full playbook + idempotency gate
 docker build -f fedora.Dockerfile .
 ```
 
-macOS can't be containerized: `ansible-playbook main.yml --check` first,
+macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.

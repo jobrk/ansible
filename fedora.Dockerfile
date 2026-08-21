@@ -14,8 +14,8 @@ WORKDIR /home/jobrk
 FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
-RUN ./.local/bin/ansible-playbook ./ansible/main.yml
-RUN ./.local/bin/ansible-playbook ./ansible/main.yml | tee /tmp/second-run.log && \
+RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml
+RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 ENV TERM=xterm-256color
 CMD ["/bin/zsh"]

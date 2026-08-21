@@ -1,6 +1,6 @@
 ---
 - name: Install Iosevka Term Nerd Font (Linux)
-  when: ansible_system == 'Linux'
+  when: ansible_facts['system'] == 'Linux'
   block:
     - name: Create ~/.fonts
       ansible.builtin.file:

@@ -55,7 +55,7 @@ if [ "$OS" != "Darwin" ] && [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && [ -z "$
 fi
 
 ARGS=()
-if [ "$(id -u)" = 0 ] || sudo -n true 2> /dev/null; then
+if [ "$(id -u)" = 0 ] || sudo -n -k true 2> /dev/null; then
   :
 elif [ -t 0 ]; then
   ARGS+=(-K)
@@ -65,7 +65,7 @@ fi
 [ -n "$SKIP" ] && ARGS+=(--skip-tags "$SKIP")
 
 log "Running playbook ${ARGS[*]:-}"
-ansible-playbook main.yml ${ARGS[@]+"${ARGS[@]}"}
+ansible-playbook -i inventory.ini main.yml ${ARGS[@]+"${ARGS[@]}"}
 
 log "Done. Remaining manual steps:"
 echo "  - edit ~/.gitconfig.local (placeholder email)"
