@@ -65,6 +65,21 @@ ansible-playbook -i inventory.ini main.yml -K
 Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
 (everything sudo-free).
 
+## Over SSH
+
+Copy `inventory.example.ini` to a private inventory, list your machines, then
+from any control machine:
+
+```sh
+ansible-playbook -i my-inventory.ini main.yml -e target=workstations -K
+```
+
+Targets need SSH access and Python; everything else is pushed over the
+connection. `-e target=droplet` hits a single host. Without `-e target`
+the playbook runs locally as before. Headless targets: add
+`--skip-tags ui`. First-run macOS targets are better provisioned locally
+(brew bootstrap is interactive over SSH).
+
 ## Cloud (DigitalOcean, etc.)
 
 Paste `cloud-init.yml` as user data at droplet creation. It creates the `josh`

@@ -1,7 +1,6 @@
 ---
 - name: Development environment setup
-  hosts: localhost
-  connection: local
+  hosts: "{{ target | default('localhost') }}"
   vars:
     dotfiles_dest: "{{ lookup('env', 'DOTFILES_DEST') or lookup('env', 'HOME') ~ '/projects/dotfiles' }}"
     fnm_executable: >-
