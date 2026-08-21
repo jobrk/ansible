@@ -10,7 +10,6 @@
     repo: https://github.com/jobrk/dotfiles
     dest: "{{ dotfiles_dest }}"
     recursive: true
-    update: false
 
 - name: Stow dotfiles
   ansible.builtin.command: ./install.sh
