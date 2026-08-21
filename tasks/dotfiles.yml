@@ -17,4 +17,4 @@
   args:
     chdir: "{{ dotfiles_dest }}"
   register: dotfiles_stow
-  changed_when: "'Backed up ' in dotfiles_stow.stdout or 'LINK:' in dotfiles_stow.stderr or 'UNLINK:' in dotfiles_stow.stderr"
+  changed_when: "'LINK:' in dotfiles_stow.stderr or 'UNLINK:' in dotfiles_stow.stderr"
