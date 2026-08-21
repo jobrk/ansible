@@ -59,7 +59,3 @@
     - name: Machine-local templates
       ansible.builtin.import_tasks: tasks/templates.yml
       tags: dotfiles
-
-    - name: Secrets
-      ansible.builtin.import_tasks: tasks/secrets.yml
-      tags: secrets

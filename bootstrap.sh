@@ -63,7 +63,6 @@ else
   SKIP="${SKIP:+$SKIP,}become"
 fi
 [ -n "$SKIP" ] && ARGS+=(--skip-tags "$SKIP")
-[ -f vars/secrets.yml ] && [ -t 0 ] && ARGS+=(--ask-vault-pass)
 
 log "Running playbook ${ARGS[*]:-}"
 ansible-playbook main.yml ${ARGS[@]+"${ARGS[@]}"}
@@ -71,6 +70,5 @@ ansible-playbook main.yml ${ARGS[@]+"${ARGS[@]}"}
 log "Done. Remaining manual steps:"
 echo "  - edit ~/.gitconfig.local (placeholder email)"
 echo "  - fill ~/.zshrc.local, ~/.config/sessionizer/paths as needed"
-echo "  - secrets: cp vars/secrets.yml.example vars/secrets.yml, edit,"
-echo "    ansible-vault encrypt, re-run — or write ~/.config/zsh/secrets.zsh by hand"
+echo "  - put local credentials in ~/.config/zsh/secrets.zsh"
 echo "  - launch nvim once (plugins bootstrap)"

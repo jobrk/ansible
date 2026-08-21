@@ -17,9 +17,9 @@ The script installs ansible (pipx/brew, bootstrapping brew on a bare mac),
 clones or updates this repo, and runs the playbook with flags inferred from
 the machine: `ui` skipped on headless Linux (no `$DISPLAY`; force with
 `UI=1`), `-K` only when sudo needs a password and stdin is a tty, `become`
-skipped when non-interactive without sudo, `--ask-vault-pass` when
-`vars/secrets.yml` exists. Env overrides: `GH_TOKEN` (private-repo auth via
-credential store), `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
+skipped when non-interactive without sudo. Env overrides: `GH_TOKEN`
+(private-repo auth via credential store), `SKIP_TAGS`, `ANSIBLE_REPO`,
+`ANSIBLE_DEST`.
 
 Re-run any time to converge; a second run reports `changed=0`.
 
@@ -47,17 +47,17 @@ If the repos are made private, set a fine-grained read-only PAT before
 bootstrapping: `GH_TOKEN=github_pat_... bash bootstrap.sh` — or run
 `gh auth login` first and use the manual flow.
 
-## Secrets (optional)
+## Secrets
 
 ```sh
-cp vars/secrets.yml.example vars/secrets.yml
-$EDITOR vars/secrets.yml                 # fill in values (file is gitignored)
-ansible-vault encrypt vars/secrets.yml
-ansible-playbook main.yml --ask-vault-pass
+mkdir -p ~/.config/zsh
+cp ~/projects/dotfiles/templates/secrets.zsh.example ~/.config/zsh/secrets.zsh
+chmod 600 ~/.config/zsh/secrets.zsh
+$EDITOR ~/.config/zsh/secrets.zsh
 ```
 
-Writes `~/.config/zsh/secrets.zsh` (0600), sourced by the dotfiles zshrc.
-Without a vault the step is skipped and the file can be managed by hand.
+The file is sourced by the dotfiles Zsh configuration and is never tracked or
+managed by Ansible.
 
 ## After the playbook
 
