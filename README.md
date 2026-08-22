@@ -41,10 +41,10 @@ Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
 
 ## Cloud (DigitalOcean, etc.)
 
-Paste `cloud-init.yml` as user data at droplet creation: makes the user
-(SSH keys imported from GitHub), then runs bootstrap. The machine is
-provisioned before first login. Its piped bootstrap command is safe because the
-created user has passwordless sudo. Secrets stay manual by design.
+Paste `cloud-init.yml` as user data at droplet creation. It creates the `josh`
+user with passwordless sudo and imports SSH keys from GitHub. SSH in as `josh`,
+then run the bootstrap command from [Usage](#usage). Ansible installs zsh and
+makes it the default shell. Secrets stay manual by design.
 
 ## Private repos
 
