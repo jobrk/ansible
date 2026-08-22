@@ -38,6 +38,9 @@ add_skip_tag() {
 
 configure_locale
 export PATH="$HOME/.local/bin:$PATH"
+if [[ -x /usr/bin/sudo.ws ]]; then
+  export ANSIBLE_BECOME_EXE=/usr/bin/sudo.ws
+fi
 
 if ! command -v git > /dev/null || ! command -v ansible-playbook > /dev/null; then
   log "Installing git + ansible"
