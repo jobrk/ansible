@@ -11,6 +11,20 @@
     dest: "{{ dotfiles_dest }}"
     recursive: true
 
+- name: Use SSH for dotfiles pushes
+  community.general.git_config:
+    name: remote.origin.pushurl
+    value: git@github.com:jobrk/dotfiles.git
+    scope: local
+    repo: "{{ dotfiles_dest }}"
+
+- name: Enable stylua pre-commit hook in nvim config
+  community.general.git_config:
+    name: core.hooksPath
+    value: .githooks
+    scope: local
+    repo: "{{ dotfiles_dest }}/nvim/.config/nvim"
+
 - name: Stow dotfiles
   ansible.builtin.command: ./install.sh
   args:

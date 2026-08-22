@@ -74,9 +74,11 @@ managed by Ansible.
 ## Testing
 
 ```sh
-docker build -f debian.Dockerfile .     # full playbook + idempotency gate
-docker build -f fedora.Dockerfile .
+podman build --no-cache -f ubuntu.Dockerfile .  # headless playbook + idempotency gate
+podman build --no-cache -f fedora.Dockerfile .
 ```
+
+Use `docker` instead of `podman` when Docker is running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.

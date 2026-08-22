@@ -1,12 +1,11 @@
-FROM fedora:44 AS base
-WORKDIR /usr/local/bin
-RUN dnf update -y && \
-    dnf install -y pipx git sudo && \
-    dnf clean all
+FROM ubuntu:24.04 AS base
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y curl git pipx sudo && \
+    apt-get clean
 
 FROM base AS jobrk
-RUN groupadd -g 1000 jobrk
-RUN adduser -u 1000 -g 1000 jobrk
+RUN adduser --gecos jobrk --disabled-password jobrk
 RUN echo "jobrk ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/jobrk
 USER jobrk
 WORKDIR /home/jobrk

@@ -4,6 +4,9 @@
   connection: local
   vars:
     dotfiles_dest: "{{ lookup('env', 'DOTFILES_DEST') or lookup('env', 'HOME') ~ '/projects/dotfiles' }}"
+    fnm_executable: >-
+      {{ lookup('env', 'HOME') ~ '/.local/share/fnm/fnm'
+         if ansible_facts['system'] == 'Linux' else 'fnm' }}
   pre_tasks:
     - name: Load operating system variables
       ansible.builtin.include_vars: "vars/{{ ansible_facts['os_family'] }}.yml"

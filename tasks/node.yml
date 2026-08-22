@@ -1,6 +1,6 @@
 ---
 - name: Check for fnm
-  ansible.builtin.command: fnm --version
+  ansible.builtin.command: "{{ fnm_executable }} --version"
   register: fnm_check
   changed_when: false
   failed_when: false
@@ -23,8 +23,14 @@
     path: ~/.fnm-installer
     state: absent
 
+- name: Symlink fnm into ~/.local/bin (Linux)
+  ansible.builtin.file:
+    src: "{{ fnm_executable }}"
+    dest: ~/.local/bin/fnm
+    state: link
+  when: ansible_facts['system'] == 'Linux'
+
 - name: Install latest LTS node
-  ansible.builtin.command: >-
-    {{ 'fnm' if fnm_check.rc == 0 else lookup('env', 'HOME') ~ '/.local/share/fnm/fnm' }} install --lts
+  ansible.builtin.command: "{{ fnm_executable }} install --lts"
   register: fnm_install
   changed_when: "'already installed' not in fnm_install.stderr"

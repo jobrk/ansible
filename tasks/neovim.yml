@@ -27,12 +27,3 @@
         src: ~/.local/nvim/bin/nvim
         dest: ~/.local/bin/nvim
         state: link
-
-- name: Enable stylua pre-commit hook in nvim config
-  community.general.git_config:
-    name: core.hooksPath
-    value: .githooks
-    scope: local
-    repo: "{{ dotfiles_dest }}/nvim/.config/nvim"
-  failed_when: false
-  tags: dotfiles
