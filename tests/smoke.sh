@@ -78,6 +78,7 @@ javac -version 2>&1 | grep -q '^javac 25' || fail 'Javac 25 version is invalid'
 python3 --version | grep -q '^Python 3\.' || fail 'Python 3 version is invalid'
 node --version | grep -q '^v' || fail 'Node version is invalid'
 rustc --version | grep -q '^rustc ' || fail 'Rust version is invalid'
+nvim --version | grep -q '^NVIM v0\.12\.4$' || fail 'Neovim version is invalid'
 printf '    Go:          %s\n' "$(go version)"
 printf '    Rust:        %s\n' "$(rustc --version)"
 printf '    Node:        %s\n' "$(node --version)"
@@ -85,6 +86,7 @@ printf '    .NET SDK:    %s\n' "$(dotnet --version)"
 printf '    Java:        %s\n' "$(java -version 2>&1 | sed -n '1p')"
 printf '    Python:      %s\n' "$(python3 --version)"
 printf '    Tree-sitter: %s\n' "$(tree-sitter --version)"
+printf '    Neovim:      %s\n' "$(nvim --version | sed -n '1p')"
 
 test_root=$(mktemp -d)
 tmux_socket="ansible-smoke-$$"
@@ -153,6 +155,27 @@ run_with_timeout "$test_root/mason.log" 900 nvim --headless '+MasonToolsInstallS
 }
 check_log "$test_root/mason.log" 'Mason tool installation'
 pass 'All configured Mason tools installed'
+
+step 'Checking Java editor integration'
+mkdir -p "$test_root/java-lsp/.git"
+printf 'class Smoke { public static void main(String[] args) { System.out.println("smoke-ok"); } }\n' > "$test_root/java-lsp/Smoke.java"
+cat > "$test_root/check-jdtls.lua" <<'LUA'
+local attached = vim.wait(180000, function()
+  local clients = vim.lsp.get_clients { name = 'jdtls' }
+  return #clients > 0 and require('dap').adapters.java ~= nil
+end, 100)
+assert(attached, 'JDTLS did not attach or register its debug adapter')
+local client = vim.lsp.get_clients { name = 'jdtls' }[1]
+local bundles = client.config.init_options and client.config.init_options.bundles or {}
+assert(#bundles > 1, 'Java debug and test bundles were not loaded')
+LUA
+nvim --headless "$test_root/java-lsp/Smoke.java" \
+  "+luafile $test_root/check-jdtls.lua" +qa > "$test_root/jdtls.log" 2>&1 || {
+  sed -n '1,200p' "$test_root/jdtls.log" >&2
+  fail 'Java editor integration failed'
+}
+check_log "$test_root/jdtls.log" 'Java editor integration'
+pass 'JDTLS, Java debugging, and Java test bundles'
 
 step 'Checking Tree-sitter parsers'
 cat > "$test_root/check-parsers.lua" <<'LUA'

@@ -24,9 +24,8 @@ The script installs ansible (pipx/brew, bootstrapping brew on a bare mac),
 clones or updates this repo, and runs the playbook with flags inferred from
 the machine: `ui` skipped on headless Linux (no `$DISPLAY`; force with
 `UI=1`), `-K` only when sudo needs a password and stdin is a tty, `become`
-skipped when non-interactive without sudo. Env overrides: `GH_TOKEN`
-(private-repo auth via credential store), `SKIP_TAGS`, `ANSIBLE_REPO`,
-`ANSIBLE_DEST`.
+skipped when non-interactive without sudo. Env overrides: `SKIP_TAGS`,
+`ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
 Re-run any time to converge; a second run reports `changed=0`.
 
@@ -48,12 +47,6 @@ Paste `cloud-init.yml` as user data at droplet creation. It creates the `josh`
 user with passwordless sudo and imports SSH keys from GitHub. SSH in as `josh`,
 then run the bootstrap command from [Usage](#usage). Ansible installs zsh and
 makes it the default shell. Secrets stay manual by design.
-
-## Private repos
-
-If the repos are made private, set a fine-grained read-only PAT before
-bootstrapping: `GH_TOKEN=github_pat_... bash bootstrap.sh` — or run
-`gh auth login` first and use the manual flow.
 
 ## Secrets
 

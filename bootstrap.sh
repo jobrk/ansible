@@ -33,13 +33,6 @@ if ! command -v git > /dev/null || ! command -v ansible-playbook > /dev/null; th
   fi
 fi
 
-if [ -n "${GH_TOKEN:-}" ]; then
-  log "Configuring GitHub token auth"
-  git config --global credential.helper store
-  printf 'https://oauth2:%s@github.com\n' "$GH_TOKEN" > ~/.git-credentials
-  chmod 600 ~/.git-credentials
-fi
-
 log "Fetching playbook"
 if [ -d "$DEST/.git" ]; then
   git -C "$DEST" pull --ff-only

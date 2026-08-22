@@ -1,29 +1,65 @@
 ---
-- name: Check for neovim (Linux)
-  when: ansible_facts['system'] == 'Linux'
-  ansible.builtin.stat:
-    path: ~/.local/nvim/bin/nvim
-  register: nvim_binary
+- name: Check Neovim version
+  ansible.builtin.command: ~/.local/nvim/bin/nvim --version
+  register: nvim_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
 
-- name: Install neovim from release tarball (Linux)
-  when: ansible_facts['system'] == 'Linux' and (not nvim_binary.stat.exists or nvim_force | default(false))
+- name: Install pinned Neovim release
+  when: >-
+    nvim_check.rc != 0 or
+    ('NVIM v' ~ nvim_version) not in nvim_check.stdout_lines or
+    nvim_force | default(false)
   vars:
-    nvim_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else ansible_facts['architecture'] }}"
+    nvim_platform: "{{ 'macos' if ansible_facts['system'] == 'Darwin' else 'linux' }}"
+    nvim_arch: "{{ 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}"
+    nvim_asset: "nvim-{{ nvim_platform }}-{{ nvim_arch }}"
+    nvim_local_dir: "{{ lookup('env', 'HOME') }}/.local"
+    nvim_archive: "{{ nvim_local_dir }}/{{ nvim_asset }}-v{{ nvim_version }}.tar.gz"
+    nvim_checksums:
+      linux_arm64: ceb7e88c6b681f0515d135dcdfad54f5eb4373b25ce6172197cd9a69c758063f
+      linux_x86_64: 012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628
+      macos_arm64: 51ab83afa66d663627c2ab1be43209b0f4e81360d4598b53efaa4d8195f24c89
+      macos_x86_64: 03fe16f8dd9f1e9eaf52d5e294913a39917b9e2faea30d7fb0fb385fbd36fe59
   block:
-    - name: Download neovim stable tarball
-      ansible.builtin.unarchive:
-        src: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-{{ nvim_arch }}.tar.gz"
-        dest: ~/.local
-        remote_src: true
+    - name: Download Neovim release
+      ansible.builtin.get_url:
+        url: "https://github.com/neovim/neovim/releases/download/v{{ nvim_version }}/{{ nvim_asset }}.tar.gz"
+        dest: "{{ nvim_archive }}"
+        checksum: "sha256:{{ nvim_checksums[nvim_platform ~ '_' ~ nvim_arch] }}"
+        mode: "0644"
 
-    - name: Point ~/.local/nvim at the unpacked tree
+    - name: Remove previous Neovim tree
       ansible.builtin.file:
-        src: "~/.local/nvim-linux-{{ nvim_arch }}"
+        path: "{{ nvim_local_dir }}/{{ nvim_asset }}"
+        state: absent
+
+    - name: Extract Neovim release
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/tar
+          - -xzf
+          - "{{ nvim_archive }}"
+          - -C
+          - "{{ nvim_local_dir }}"
+      changed_when: true
+
+    - name: Remove Neovim archive
+      ansible.builtin.file:
+        path: "{{ nvim_archive }}"
+        state: absent
+
+    - name: Point ~/.local/nvim at the pinned release
+      ansible.builtin.file:
+        src: "{{ nvim_local_dir }}/{{ nvim_asset }}"
         dest: ~/.local/nvim
         state: link
+        force: true
 
     - name: Symlink nvim into ~/.local/bin
       ansible.builtin.file:
         src: ~/.local/nvim/bin/nvim
         dest: ~/.local/bin/nvim
         state: link
+        force: true
