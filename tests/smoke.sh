@@ -70,6 +70,11 @@ for executable in "${required_commands[@]}"; do
 done
 pass "${#required_commands[@]} commands available"
 
+if [[ $(uname -s) == Linux ]] && command -v apt-get >/dev/null; then
+  [[ $(LC_ALL=en_US.UTF-8 locale charmap) == UTF-8 ]] || fail 'en_US.UTF-8 locale is unavailable'
+  pass 'en_US.UTF-8 locale generated'
+fi
+
 go version | grep -q '^go version go' || fail 'Go version is invalid'
 tree-sitter --version | grep -q '^tree-sitter ' || fail 'Tree-sitter version is invalid'
 dotnet --version | grep -q '^10\.' || fail '.NET 10 SDK version is invalid'
@@ -130,6 +135,9 @@ pass '.NET compile and run'
 pass 'Node execution'
 
 step 'Checking shell and terminal configuration'
+[[ ${LANG:-} == en_US.UTF-8 ]] || fail "shell LANG is ${LANG:-unset}, expected en_US.UTF-8"
+[[ -z ${LC_ALL+x} ]] || fail "shell LC_ALL should be unset, got $LC_ALL"
+pass 'Shell uses en_US.UTF-8 without an LC_ALL override'
 zsh -n "$HOME/.zshrc"
 pass 'Zsh configuration syntax'
 bash -n "$HOME/.local/bin/tmux-sessionizer"

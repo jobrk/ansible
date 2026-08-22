@@ -1,4 +1,51 @@
 ---
+- name: Check for Microsoft package feed (Debian)
+  when: ansible_facts['distribution'] == 'Debian'
+  ansible.builtin.command:
+    argv:
+      - dpkg-query
+      - --show
+      - packages-microsoft-prod
+  register: microsoft_feed
+  changed_when: false
+  failed_when: false
+
+- name: Configure Microsoft package feed (Debian)
+  when:
+    - ansible_facts['distribution'] == 'Debian'
+    - microsoft_feed.rc != 0
+  block:
+    - name: Install Microsoft package feed prerequisites
+      become: true
+      tags: become
+      ansible.builtin.apt:
+        update_cache: true
+        name:
+          - ca-certificates
+          - xz-utils
+
+    - name: Download Microsoft package feed
+      become: true
+      tags: become
+      ansible.builtin.get_url:
+        url: >-
+          https://packages.microsoft.com/config/debian/{{ ansible_facts['distribution_major_version'] }}/packages-microsoft-prod.deb
+        dest: /tmp/packages-microsoft-prod.deb
+        mode: "0644"
+
+    - name: Install Microsoft package feed
+      become: true
+      tags: become
+      ansible.builtin.apt:
+        deb: /tmp/packages-microsoft-prod.deb
+
+    - name: Remove Microsoft package feed installer
+      become: true
+      tags: become
+      ansible.builtin.file:
+        path: /tmp/packages-microsoft-prod.deb
+        state: absent
+
 - name: Install core packages (apt)
   become: true
   tags: become
@@ -6,6 +53,25 @@
   ansible.builtin.apt:
     update_cache: true
     name: "{{ core_packages }}"
+
+- name: Generate US English locale
+  become: true
+  tags: become
+  when: ansible_facts['os_family'] == 'Debian'
+  community.general.locale_gen:
+    name: en_US.UTF-8
+    state: present
+
+- name: Set US English as the default locale
+  become: true
+  tags: become
+  when: ansible_facts['os_family'] == 'Debian'
+  ansible.builtin.lineinfile:
+    path: /etc/default/locale
+    regexp: '^LANG='
+    line: LANG=en_US.UTF-8
+    create: true
+    mode: "0644"
 
 - name: Install UI packages (apt)
   become: true

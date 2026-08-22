@@ -2,6 +2,7 @@
 core_packages:
   - bat
   - build-essential
+  - ca-certificates
   - cmake
   - curl
   - direnv
@@ -16,6 +17,7 @@ core_packages:
   - libfreetype-dev
   - libxcb-xfixes0-dev
   - libxkbcommon-dev
+  - locales
   - openjdk-25-jdk
   - pipx
   - pkg-config
@@ -25,6 +27,7 @@ core_packages:
   - stow
   - tmux
   - unzip
+  - xz-utils
   - zsh
 
 ui_packages:

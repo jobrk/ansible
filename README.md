@@ -45,9 +45,10 @@ Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
 ## Cloud (DigitalOcean, etc.)
 
 Paste `cloud-init.yml` as user data at droplet creation. It creates the `josh`
-user with passwordless sudo and imports SSH keys from GitHub. SSH in as `josh`,
-then run the bootstrap command from [Usage](#usage). Ansible installs zsh and
-makes it the default shell. Secrets stay manual by design.
+user with passwordless sudo, imports SSH keys from GitHub, and configures the
+`en_US.UTF-8` locale. SSH in as `josh`, then run the bootstrap command from
+[Usage](#usage). Ansible installs zsh and makes it the default shell. Secrets
+stay manual by design.
 
 ## Secrets
 
@@ -73,6 +74,7 @@ managed by Ansible.
 
 ```sh
 podman build --no-cache -f ubuntu.Dockerfile .
+podman build --no-cache -f debian.Dockerfile .
 podman build --no-cache -f fedora.Dockerfile .
 ```
 
@@ -80,8 +82,8 @@ Each image runs the playbook twice, requires `changed=0` on the second run, and
 runs `tests/smoke.sh`. The smoke test compiles and runs each language toolchain,
 installs every Mason tool and Tree-sitter parser, validates shell/tmux setup,
 and checks Corepack/pnpm, Bat, and repository cleanliness. GitHub Actions runs
-these checks for Ubuntu and Fedora, plus a native macOS job, on every push and
-pull request. Use `docker` instead of `podman` when Docker is running.
+these checks for Ubuntu, Debian, and Fedora, plus a native macOS job, on every
+push and pull request. Use `docker` instead of `podman` when Docker is running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.

@@ -40,6 +40,8 @@ jobs:
         include:
           - system: Ubuntu
             dockerfile: ubuntu.Dockerfile
+          - system: Debian
+            dockerfile: debian.Dockerfile
           - system: Fedora
             dockerfile: fedora.Dockerfile
     steps:
