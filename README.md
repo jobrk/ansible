@@ -79,11 +79,13 @@ podman build --no-cache -f fedora.Dockerfile .
 ```
 
 Each image runs the playbook twice, requires `changed=0` on the second run, and
-runs `tests/smoke.sh`. The smoke test compiles and runs each language toolchain,
-installs every Mason tool and Tree-sitter parser, validates shell/tmux setup,
-and checks Corepack/pnpm, Bat, and repository cleanliness. GitHub Actions runs
-these checks for Ubuntu, Debian, and Fedora, plus a native macOS job, on every
-push and pull request. Use `docker` instead of `podman` when Docker is running.
+runs `tests/smoke.sh`. The Debian image also runs the full cloud-init lifecycle
+and verifies its status, locale, user, and imported GitHub SSH keys. The smoke
+test compiles and runs each language toolchain, installs every Mason tool and
+Tree-sitter parser, validates shell/tmux setup, and checks Corepack/pnpm, Bat,
+and repository cleanliness. GitHub Actions runs these checks for Ubuntu,
+Debian, and Fedora, plus a native macOS job, on every push and pull request. Use
+`docker` instead of `podman` when Docker is running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.

@@ -1,5 +1,27 @@
+FROM debian:13 AS cloud-init-test
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y cloud-init sudo && \
+    apt-get clean
+COPY cloud-init.yml /tmp/cloud-init.yml
+RUN cloud-init schema --config-file /tmp/cloud-init.yml
+COPY cloud-init.yml /var/lib/cloud/seed/nocloud/user-data
+COPY tests/cloud-init-meta-data.yml /var/lib/cloud/seed/nocloud/meta-data
+RUN cloud-init clean --logs && \
+    cloud-init init --local && \
+    cloud-init init && \
+    cloud-init modules --mode=config && \
+    cloud-init modules --mode=final && \
+    cloud-init status --long | grep -q 'status: done' && \
+    locale -a | grep -qx en_US.utf8 && \
+    grep -qx LANG=en_US.UTF-8 /etc/default/locale && \
+    getent passwd josh >/dev/null && \
+    test -s /home/josh/.ssh/authorized_keys && \
+    touch /cloud-init-test-passed
+
 FROM debian:13 AS base
 ENV DEBIAN_FRONTEND=noninteractive
+COPY --from=cloud-init-test /cloud-init-test-passed /cloud-init-test-passed
 RUN apt-get update && \
     apt-get install -y curl git pipx sudo && \
     apt-get clean

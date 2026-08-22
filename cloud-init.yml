@@ -4,13 +4,17 @@ users:
     groups: sudo
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
-    ssh_import_id:
-      - gh:jobrk
+write_files:
+  - path: /etc/locale.gen
+    append: true
+    content: |
+      en_US.UTF-8 UTF-8
 package_update: true
 locale: en_US.UTF-8
 packages:
   - curl
   - locales
+  - ssh-import-id
+  - sudo
 runcmd:
-  - [locale-gen, en_US.UTF-8]
-  - [update-locale, LANG=en_US.UTF-8]
+  - [sudo, -Hu, josh, ssh-import-id, gh:jobrk]

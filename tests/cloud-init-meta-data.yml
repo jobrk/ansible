@@ -1,0 +1,2 @@
+instance-id: ansible-cloud-init-test
+local-hostname: debian-cloud-init-test
