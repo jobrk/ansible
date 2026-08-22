@@ -20,7 +20,7 @@ core_packages:
   - stow
   - stylua
   - tmux
-  - tree-sitter
+  - tree-sitter-cli
   - zsh
 
 cask_packages:
