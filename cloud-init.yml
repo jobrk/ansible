@@ -18,3 +18,9 @@ packages:
   - sudo
 runcmd:
   - [sudo, -Hu, josh, ssh-import-id, gh:jobrk]
+  - |
+    sed -i -E '/^[[:space:]]*AcceptEnv[[:space:]]/d' /etc/ssh/sshd_config
+    if [ -d /etc/ssh/sshd_config.d ]; then
+      find /etc/ssh/sshd_config.d -type f -name '*.conf' -exec sed -i -E '/^[[:space:]]*AcceptEnv[[:space:]]/d' {} +
+    fi
+    systemctl reload ssh 2>/dev/null || service ssh reload 2>/dev/null || true

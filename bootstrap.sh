@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# SSH clients can forward locale variables that do not exist on a new server.
+# Keep bootstrap usable long enough for Ansible to generate the preferred locale.
+unset LANGUAGE LC_ADDRESS LC_ALL LC_COLLATE LC_CTYPE LC_IDENTIFICATION LC_MEASUREMENT \
+  LC_MESSAGES LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE LC_TIME
+if locale -a 2> /dev/null | grep -Eiq '^en_US\.(UTF-8|utf8)$'; then
+  export LANG=en_US.UTF-8
+elif locale -a 2> /dev/null | grep -Eiq '^C\.(UTF-8|utf8)$'; then
+  export LANG=C.UTF-8
+else
+  export LANG=C
+fi
+
 REPO="${ANSIBLE_REPO:-https://github.com/jobrk/ansible}"
 DEST="${ANSIBLE_DEST:-$HOME/ansible}"
 OS="$(uname -s)"
@@ -64,4 +76,4 @@ log "Done. Remaining manual steps:"
 echo "  - edit ~/.gitconfig.local (placeholder email)"
 echo "  - fill ~/.zshrc.local, ~/.config/sessionizer/paths as needed"
 echo "  - put local credentials in ~/.config/zsh/secrets.zsh"
-echo "  - launch nvim once (plugins bootstrap)"
+echo "  - launch nvim (plugins and tools are already installed)"

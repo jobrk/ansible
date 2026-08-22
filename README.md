@@ -46,9 +46,10 @@ Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
 
 Paste `cloud-init.yml` as user data at droplet creation. It creates the `josh`
 user with passwordless sudo, imports SSH keys from GitHub, and configures the
-`en_US.UTF-8` locale. SSH in as `josh`, then run the bootstrap command from
-[Usage](#usage). Ansible installs zsh and makes it the default shell. Secrets
-stay manual by design.
+`en_US.UTF-8` locale. It also prevents SSH clients from replacing that locale
+with one unavailable on the server. SSH in as `josh`, then run the bootstrap
+command from [Usage](#usage). Ansible installs zsh and makes it the default
+shell. Secrets stay manual by design.
 
 ## Secrets
 

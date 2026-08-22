@@ -15,6 +15,7 @@ RUN cloud-init clean --logs && \
     cloud-init status --long | grep -q 'status: done' && \
     locale -a | grep -qx en_US.utf8 && \
     grep -qx LANG=en_US.UTF-8 /etc/default/locale && \
+    ! grep -ER '^[[:space:]]*AcceptEnv[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d && \
     getent passwd josh >/dev/null && \
     test -s /home/josh/.ssh/authorized_keys && \
     touch /cloud-init-test-passed
