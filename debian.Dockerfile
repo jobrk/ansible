@@ -24,7 +24,7 @@ FROM debian:13 AS base
 ENV DEBIAN_FRONTEND=noninteractive
 COPY --from=cloud-init-test /cloud-init-test-passed /cloud-init-test-passed
 RUN apt-get update && \
-    apt-get install -y curl git pipx sudo && \
+    apt-get install -y curl git openssh-server pipx sudo && \
     apt-get clean
 
 FROM base AS jobrk

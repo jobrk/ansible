@@ -73,6 +73,39 @@
     create: true
     mode: "0644"
 
+- name: Check for SSH daemon configuration
+  ansible.builtin.stat:
+    path: /etc/ssh/sshd_config
+  register: sshd_config
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Find SSH daemon configuration snippets
+  become: true
+  tags: become
+  ansible.builtin.find:
+    paths: /etc/ssh/sshd_config.d
+    patterns: "*.conf"
+    file_type: file
+  register: sshd_config_snippets
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - sshd_config.stat.exists
+
+- name: Ignore locale variables forwarded by SSH clients
+  become: true
+  tags: become
+  ansible.builtin.lineinfile:
+    path: "{{ item }}"
+    regexp: '^\s*AcceptEnv\s'
+    state: absent
+  loop: >-
+    {{ ['/etc/ssh/sshd_config'] +
+       (sshd_config_snippets.files | default([]) | map(attribute='path') | list) }}
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - sshd_config.stat.exists
+  notify: Reload SSH
+
 - name: Install UI packages (apt)
   become: true
   tags:

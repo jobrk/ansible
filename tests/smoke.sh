@@ -47,6 +47,11 @@ pass "${#required_commands[@]} commands available"
 if [[ $(uname -s) == Linux ]] && command -v apt-get >/dev/null; then
   [[ $(LC_ALL=en_US.UTF-8 locale charmap) == UTF-8 ]] || fail 'en_US.UTF-8 locale is unavailable'
   pass 'en_US.UTF-8 locale generated'
+  if [[ -f /etc/ssh/sshd_config ]]; then
+    ssh_accept_env=$(grep -ER '^[[:space:]]*AcceptEnv[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null || true)
+    [[ -z $ssh_accept_env ]] || fail "SSH still accepts client locale variables: $ssh_accept_env"
+    pass 'SSH ignores client locale variables'
+  fi
 fi
 
 go version | grep -q '^go version go' || fail 'Go version is invalid'

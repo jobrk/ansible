@@ -76,3 +76,12 @@
     - name: Refresh font cache
       ansible.builtin.command: fc-cache -f ~/.fonts
       changed_when: true
+
+    - name: Reload SSH
+      become: true
+      ansible.builtin.service:
+        name: ssh
+        state: reloaded
+      when:
+        - ansible_facts['service_mgr'] == 'systemd'
+        - ansible_facts['virtualization_type'] | default('') not in ['docker', 'podman', 'container']
