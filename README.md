@@ -27,7 +27,8 @@ the machine: `ui` skipped on headless Linux (no `$DISPLAY`; force with
 skipped when non-interactive without sudo. Env overrides: `SKIP_TAGS`,
 `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
-Re-run any time to converge; a second run reports `changed=0`.
+Re-run any time to converge; a second run reports `changed=0`. Neovim follows
+the latest stable GitHub release and upgrades when that release changes.
 
 Manual equivalent:
 
@@ -78,8 +79,9 @@ podman build --no-cache -f fedora.Dockerfile .
 Each image runs the playbook twice, requires `changed=0` on the second run, and
 runs `tests/smoke.sh`. The smoke test compiles and runs each language toolchain,
 installs every Mason tool and Tree-sitter parser, validates shell/tmux setup,
-and checks Bat and repository cleanliness. Use `docker` instead of `podman`
-when Docker is running.
+and checks Corepack/pnpm, Bat, and repository cleanliness. GitHub Actions runs
+these checks for Ubuntu and Fedora, plus a native macOS job, on every push and
+pull request. Use `docker` instead of `podman` when Docker is running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.

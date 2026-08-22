@@ -62,8 +62,8 @@ printf 'Smoke test: %s %s\n' "$(uname -s)" "$(uname -m)"
 
 step 'Checking required commands'
 required_commands=(
-  bat cargo delta direnv dotnet fd fnm fzf git git-absorb go java javac jq \
-  node npm nvim pipx python3 rg rustc stow tmux tree-sitter zsh
+  bat cargo corepack delta direnv dotnet fd fnm fzf git git-absorb go java javac \
+  jq node npm nvim pipx pnpm python3 rg rustc stow tmux tree-sitter zsh
 )
 for executable in "${required_commands[@]}"; do
   require_command "$executable"
@@ -78,10 +78,14 @@ javac -version 2>&1 | grep -q '^javac 25' || fail 'Javac 25 version is invalid'
 python3 --version | grep -q '^Python 3\.' || fail 'Python 3 version is invalid'
 node --version | grep -q '^v' || fail 'Node version is invalid'
 rustc --version | grep -q '^rustc ' || fail 'Rust version is invalid'
-nvim --version | grep -q '^NVIM v0\.12\.4$' || fail 'Neovim version is invalid'
+nvim --version | grep -Eq '^NVIM v[0-9]+\.[0-9]+\.[0-9]+$' || fail 'Neovim version is invalid'
+corepack --version | grep -Eq '^[0-9]+\.' || fail 'Corepack version is invalid'
+pnpm --version | grep -Eq '^[0-9]+\.' || fail 'pnpm version is invalid'
 printf '    Go:          %s\n' "$(go version)"
 printf '    Rust:        %s\n' "$(rustc --version)"
 printf '    Node:        %s\n' "$(node --version)"
+printf '    Corepack:    %s\n' "$(corepack --version)"
+printf '    pnpm:        %s\n' "$(pnpm --version)"
 printf '    .NET SDK:    %s\n' "$(dotnet --version)"
 printf '    Java:        %s\n' "$(java -version 2>&1 | sed -n '1p')"
 printf '    Python:      %s\n' "$(python3 --version)"

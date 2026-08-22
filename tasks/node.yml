@@ -31,6 +31,6 @@
   when: ansible_facts['system'] == 'Linux'
 
 - name: Install latest LTS node
-  ansible.builtin.command: "{{ fnm_executable }} install --lts"
+  ansible.builtin.command: "{{ fnm_executable }} install --lts --corepack-enabled"
   register: fnm_install
   changed_when: "'already installed' not in fnm_install.stderr"

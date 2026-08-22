@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Ansible tooling
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install ansible ansible-lint
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r requirements.yml
+      - name: Check playbook and scripts
+        run: |
+          ansible-lint main.yml
+          ansible-playbook -i inventory.ini main.yml --syntax-check
+          bash -n bootstrap.sh tests/smoke.sh
+
+  linux:
+    name: ${{ matrix.system }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: Ubuntu
+            dockerfile: ubuntu.Dockerfile
+          - system: Fedora
+            dockerfile: fedora.Dockerfile
+    steps:
+      - uses: actions/checkout@v6
+      - name: Provision twice and run smoke test
+        run: docker build --file "${{ matrix.dockerfile }}" .
+
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Ansible
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install ansible
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r requirements.yml
+      - name: Provision
+        run: ansible-playbook -i inventory.ini main.yml --skip-tags ui
+      - name: Verify idempotence
+        run: |
+          ansible-playbook -i inventory.ini main.yml --skip-tags ui | tee /tmp/second-run.log
+          grep -E 'changed=0.*failed=0' /tmp/second-run.log
+      - name: Run smoke test
+        run: /bin/zsh -lic 'bash "$GITHUB_WORKSPACE/tests/smoke.sh"'

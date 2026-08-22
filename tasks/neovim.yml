@@ -1,4 +1,26 @@
 ---
+- name: Find latest stable Neovim release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/neovim/neovim/releases/latest
+    headers:
+      Accept: application/vnd.github+json
+    return_content: true
+  register: nvim_release
+  changed_when: false
+  check_mode: false
+
+- name: Select Neovim release asset
+  vars:
+    nvim_platform: "{{ 'macos' if ansible_facts['system'] == 'Darwin' else 'linux' }}"
+    nvim_arch: "{{ 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}"
+    nvim_asset_name: "nvim-{{ nvim_platform }}-{{ nvim_arch }}.tar.gz"
+    nvim_asset: "{{ nvim_release.json.assets | selectattr('name', 'equalto', nvim_asset_name) | first }}"
+  ansible.builtin.set_fact:
+    nvim_version: "{{ nvim_release.json.tag_name | regex_replace('^v', '') }}"
+    nvim_download_url: "{{ nvim_asset.browser_download_url }}"
+    nvim_checksum: "{{ nvim_asset.digest }}"
+    nvim_release_dir: "{{ nvim_asset_name | regex_replace('\\.tar\\.gz$', '') }}"
+
 - name: Check Neovim version
   ansible.builtin.command: ~/.local/nvim/bin/nvim --version
   register: nvim_check
@@ -6,33 +28,25 @@
   failed_when: false
   check_mode: false
 
-- name: Install pinned Neovim release
+- name: Install latest stable Neovim release
   when: >-
     nvim_check.rc != 0 or
     ('NVIM v' ~ nvim_version) not in nvim_check.stdout_lines or
     nvim_force | default(false)
   vars:
-    nvim_platform: "{{ 'macos' if ansible_facts['system'] == 'Darwin' else 'linux' }}"
-    nvim_arch: "{{ 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}"
-    nvim_asset: "nvim-{{ nvim_platform }}-{{ nvim_arch }}"
     nvim_local_dir: "{{ lookup('env', 'HOME') }}/.local"
-    nvim_archive: "{{ nvim_local_dir }}/{{ nvim_asset }}-v{{ nvim_version }}.tar.gz"
-    nvim_checksums:
-      linux_arm64: ceb7e88c6b681f0515d135dcdfad54f5eb4373b25ce6172197cd9a69c758063f
-      linux_x86_64: 012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628
-      macos_arm64: 51ab83afa66d663627c2ab1be43209b0f4e81360d4598b53efaa4d8195f24c89
-      macos_x86_64: 03fe16f8dd9f1e9eaf52d5e294913a39917b9e2faea30d7fb0fb385fbd36fe59
+    nvim_archive: "{{ nvim_local_dir }}/{{ nvim_release_dir }}-v{{ nvim_version }}.tar.gz"
   block:
     - name: Download Neovim release
       ansible.builtin.get_url:
-        url: "https://github.com/neovim/neovim/releases/download/v{{ nvim_version }}/{{ nvim_asset }}.tar.gz"
+        url: "{{ nvim_download_url }}"
         dest: "{{ nvim_archive }}"
-        checksum: "sha256:{{ nvim_checksums[nvim_platform ~ '_' ~ nvim_arch] }}"
+        checksum: "{{ nvim_checksum }}"
         mode: "0644"
 
     - name: Remove previous Neovim tree
       ansible.builtin.file:
-        path: "{{ nvim_local_dir }}/{{ nvim_asset }}"
+        path: "{{ nvim_local_dir }}/{{ nvim_release_dir }}"
         state: absent
 
     - name: Extract Neovim release
@@ -50,9 +64,9 @@
         path: "{{ nvim_archive }}"
         state: absent
 
-    - name: Point ~/.local/nvim at the pinned release
+    - name: Point ~/.local/nvim at the stable release
       ansible.builtin.file:
-        src: "{{ nvim_local_dir }}/{{ nvim_asset }}"
+        src: "{{ nvim_local_dir }}/{{ nvim_release_dir }}"
         dest: ~/.local/nvim
         state: link
         force: true
