@@ -51,11 +51,6 @@
       ansible.builtin.import_tasks: tasks/alacritty.yml
       tags: ui
 
-    - name: I3 (Linux)
-      ansible.builtin.import_tasks: tasks/i3.yml
-      when: ansible_facts['system'] == 'Linux'
-      tags: ui
-
     - name: MacOS extras
       ansible.builtin.import_tasks: tasks/macos.yml
       when: ansible_facts['system'] == 'Darwin'

@@ -1,4 +1,0 @@
----
-- name: I3 config is managed by dotfiles
-  ansible.builtin.debug:
-    msg: i3 config arrives via the dotfiles i3 package (stow)
