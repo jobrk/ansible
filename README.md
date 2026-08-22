@@ -49,7 +49,7 @@ user with passwordless sudo, imports SSH keys from GitHub, and configures the
 `en_US.UTF-8` locale. It also prevents SSH clients from replacing that locale
 with one unavailable on the server. SSH in as `josh`, then run the bootstrap
 command from [Usage](#usage). Ansible installs zsh and makes it the default
-shell. Secrets stay manual by design.
+shell.
 
 ## Secrets
 
@@ -63,9 +63,7 @@ $EDITOR ~/.config/zsh/secrets.zsh
 The file is sourced by the dotfiles Zsh configuration and is never tracked or
 managed by Ansible.
 
-## After the playbook
-
-Neovim is ready immediately; no first-launch setup is required.
+## Local configuration
 
 Edit the seeded `~/.gitconfig.local` (placeholder email) and any other
 machine-local files as needed.

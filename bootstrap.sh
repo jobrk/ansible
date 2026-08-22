@@ -72,8 +72,4 @@ fi
 log "Running playbook ${ARGS[*]:-}"
 ansible-playbook -i inventory.ini main.yml ${ARGS[@]+"${ARGS[@]}"}
 
-log "Done. Neovim is ready; no first-launch setup is required."
-echo "Remaining manual steps:"
-echo "  - edit ~/.gitconfig.local (placeholder email)"
-echo "  - fill ~/.zshrc.local, ~/.config/sessionizer/paths as needed"
-echo "  - put local credentials in ~/.config/zsh/secrets.zsh"
+log "Done"

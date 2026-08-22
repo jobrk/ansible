@@ -15,10 +15,6 @@ step() {
   printf '\n==> %s\n' "$1"
 }
 
-pass() {
-  printf '    ok: %s\n' "$1"
-}
-
 require_command() {
   command -v "$1" >/dev/null || fail "$1 is unavailable"
 }
@@ -34,7 +30,7 @@ check_log() {
 
 printf 'Smoke test: %s %s\n' "$(uname -s)" "$(uname -m)"
 
-step 'Checking required commands'
+step 'Commands'
 required_commands=(
   bat cargo corepack delta direnv dotnet fd fnm fzf git git-absorb go java javac \
   jq node npm nvim pipx pnpm python3 rg rustc stow tmux tree-sitter zsh
@@ -42,15 +38,11 @@ required_commands=(
 for executable in "${required_commands[@]}"; do
   require_command "$executable"
 done
-pass "${#required_commands[@]} commands available"
-
 if [[ $(uname -s) == Linux ]] && command -v apt-get >/dev/null; then
   [[ $(LC_ALL=en_US.UTF-8 locale charmap) == UTF-8 ]] || fail 'en_US.UTF-8 locale is unavailable'
-  pass 'en_US.UTF-8 locale generated'
   if [[ -f /etc/ssh/sshd_config ]]; then
     ssh_accept_env=$(grep -ER '^[[:space:]]*AcceptEnv[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null || true)
     [[ -z $ssh_accept_env ]] || fail "SSH still accepts client locale variables: $ssh_accept_env"
-    pass 'SSH ignores client locale variables'
   fi
 fi
 
@@ -65,16 +57,6 @@ rustc --version | grep -q '^rustc ' || fail 'Rust version is invalid'
 nvim --version | grep -Eq '^NVIM v[0-9]+\.[0-9]+\.[0-9]+$' || fail 'Neovim version is invalid'
 corepack --version | grep -Eq '^[0-9]+\.' || fail 'Corepack version is invalid'
 pnpm --version | grep -Eq '^[0-9]+\.' || fail 'pnpm version is invalid'
-printf '    Go:          %s\n' "$(go version)"
-printf '    Rust:        %s\n' "$(rustc --version)"
-printf '    Node:        %s\n' "$(node --version)"
-printf '    Corepack:    %s\n' "$(corepack --version)"
-printf '    pnpm:        %s\n' "$(pnpm --version)"
-printf '    .NET SDK:    %s\n' "$(dotnet --version)"
-printf '    Java:        %s\n' "$(java -version 2>&1 | sed -n '1p')"
-printf '    Python:      %s\n' "$(python3 --version)"
-printf '    Tree-sitter: %s\n' "$(tree-sitter --version)"
-printf '    Neovim:      %s\n' "$(nvim --version | sed -n '1p')"
 
 test_root=$(mktemp -d)
 tmux_socket="ansible-smoke-$$"
@@ -84,62 +66,50 @@ cleanup() {
 }
 trap cleanup EXIT
 
-step 'Running language toolchains'
+step 'Toolchains'
 python3 -m venv "$test_root/venv"
 [[ $("$test_root/venv/bin/python" -c 'import sys; assert sys.prefix != sys.base_prefix; print("smoke-ok")') == smoke-ok ]] || fail 'Python virtual environment failed'
-pass 'Python virtual environment'
 
 mkdir "$test_root/go"
 printf 'package main\nimport "fmt"\nfunc main() { fmt.Println("smoke-ok") }\n' > "$test_root/go/main.go"
 [[ $(cd "$test_root/go" && go run main.go) == smoke-ok ]] || fail 'Go compile/run failed'
-pass 'Go compile and run'
 
 printf 'fn main() { println!("smoke-ok"); }\n' > "$test_root/main.rs"
 rustc "$test_root/main.rs" -o "$test_root/rust-smoke"
 [[ $("$test_root/rust-smoke") == smoke-ok ]] || fail 'Rust compile/run failed'
-pass 'Rust compile and run'
 
 mkdir "$test_root/java"
 printf 'class Smoke { public static void main(String[] args) { System.out.println("smoke-ok"); } }\n' > "$test_root/java/Smoke.java"
 javac -d "$test_root/java" "$test_root/java/Smoke.java"
 [[ $(java -cp "$test_root/java" Smoke) == smoke-ok ]] || fail 'Java compile/run failed'
-pass 'Java compile and run'
 
 dotnet new console --output "$test_root/dotnet" --no-restore >/dev/null
 dotnet run --project "$test_root/dotnet" > "$test_root/dotnet.log"
 grep -qx 'Hello, World!' "$test_root/dotnet.log" || fail '.NET compile/run failed'
-pass '.NET compile and run'
 
 [[ $(node -e 'console.log("smoke-ok")') == smoke-ok ]] || fail 'Node execution failed'
-pass 'Node execution'
 
-step 'Checking shell and terminal configuration'
+step 'Shell'
 [[ ${LANG:-} == en_US.UTF-8 ]] || fail "shell LANG is ${LANG:-unset}, expected en_US.UTF-8"
 [[ -z ${LC_ALL+x} ]] || fail "shell LC_ALL should be unset, got $LC_ALL"
-pass 'Shell uses en_US.UTF-8 without an LC_ALL override'
 zsh -n "$HOME/.zshrc"
-pass 'Zsh configuration syntax'
 bash -n "$HOME/.local/bin/tmux-sessionizer"
-pass 'Sessionizer syntax'
 tmux -L "$tmux_socket" -f "$HOME/.tmux.conf" new-session -d -s smoke -c "$test_root"
 [[ $(tmux -L "$tmux_socket" display-message -p -t smoke '#S') == smoke ]] || fail 'Tmux configuration failed'
-pass 'Tmux server with configured plugins'
 
-step 'Checking Bat theme'
+step 'Bat'
 bat --list-themes | grep -qx 'Catppuccin-mocha' || fail 'Bat theme is unavailable'
 bat_warning=$(printf 'test\n' | bat --color=always --plain --language=txt 2>&1 >/dev/null)
 [[ -z $bat_warning ]] || fail "Bat emitted: $bat_warning"
-pass 'Catppuccin-mocha renders without warnings'
 
-step 'Checking clean Neovim startup'
+step 'Neovim'
 nvim --headless +qa > "$test_root/nvim-startup.log" 2>&1 || {
   sed -n '1,200p' "$test_root/nvim-startup.log" >&2
   fail 'Neovim startup failed'
 }
 check_log "$test_root/nvim-startup.log" 'Neovim startup'
-pass 'Neovim started without warnings or errors'
 
-step 'Checking Neovim plugins were provisioned'
+step 'Plugins'
 cat > "$test_root/check-plugins.lua" <<'LUA'
 local missing = {}
 for name, plugin in pairs(require('lazy.core.config').plugins) do
@@ -155,9 +125,8 @@ nvim --headless "+luafile $test_root/check-plugins.lua" +qa > "$test_root/nvim-p
   fail 'Neovim plugin verification failed'
 }
 check_log "$test_root/nvim-plugins.log" 'Neovim plugin verification'
-pass 'All configured Neovim plugins installed'
 
-step 'Checking Mason tools were provisioned'
+step 'Mason'
 cat > "$test_root/check-mason.lua" <<'LUA'
 local registry = require 'mason-registry'
 local missing = {}
@@ -174,9 +143,8 @@ nvim --headless "+luafile $test_root/check-mason.lua" +qa > "$test_root/nvim-mas
   fail 'Mason tool verification failed'
 }
 check_log "$test_root/nvim-mason.log" 'Mason tool verification'
-pass 'All configured Mason tools installed'
 
-step 'Checking Java editor integration'
+step 'Java'
 mkdir -p "$test_root/java-lsp/.git"
 printf 'class Smoke { public static void main(String[] args) { System.out.println("smoke-ok"); } }\n' > "$test_root/java-lsp/Smoke.java"
 cat > "$test_root/check-jdtls.lua" <<'LUA'
@@ -195,9 +163,8 @@ nvim --headless "$test_root/java-lsp/Smoke.java" \
   fail 'Java editor integration failed'
 }
 check_log "$test_root/jdtls.log" 'Java editor integration'
-pass 'JDTLS, Java debugging, and Java test bundles'
 
-step 'Checking Tree-sitter parsers'
+step 'Tree-sitter'
 cat > "$test_root/check-parsers.lua" <<'LUA'
 local parsers = require('tooling').treesitter
 local missing = vim.tbl_filter(function(parser)
@@ -211,11 +178,9 @@ nvim --headless "+luafile $test_root/check-parsers.lua" +qa > "$test_root/nvim-p
   fail 'Tree-sitter parser verification failed'
 }
 check_log "$test_root/nvim-parsers.log" 'Tree-sitter parser verification'
-pass 'All configured Tree-sitter parsers installed'
 
-step 'Checking repository cleanliness'
+step 'Repositories'
 [[ -z $(git -C "$HOME/projects/dotfiles" status --porcelain) ]] || fail 'Dotfiles worktree is dirty'
 [[ -z $(git -C "$HOME/projects/dotfiles/nvim/.config/nvim" status --porcelain) ]] || fail 'Neovim worktree is dirty'
-pass 'Dotfiles and Neovim worktrees are clean'
 
 printf '\nSmoke test passed\n'
