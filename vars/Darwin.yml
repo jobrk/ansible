@@ -28,4 +28,5 @@ cask_packages:
   - font-iosevka-term-nerd-font
 
 ui_packages: []
+display_manager_packages: []
 binary_symlinks: []

@@ -31,5 +31,16 @@ core_packages:
 ui_packages:
   - dmenu
   - i3
+  - i3lock
+  - i3status
+  - network-manager-applet
+  - pulseaudio-utils
+  - xorg-x11-server-Xorg
+  - xorg-x11-xinit
+  - xss-lock
+
+display_manager_packages:
+  - lightdm
+  - lightdm-gtk
 
 binary_symlinks: []

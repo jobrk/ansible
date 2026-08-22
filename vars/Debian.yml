@@ -33,6 +33,16 @@ core_packages:
 ui_packages:
   - dmenu
   - i3
+  - i3lock
+  - i3status
+  - network-manager-gnome
+  - pulseaudio-utils
+  - xss-lock
+  - xorg
+
+display_manager_packages:
+  - lightdm
+  - lightdm-gtk-greeter
 
 binary_symlinks:
   - { src: /usr/bin/batcat, dest: ~/.local/bin/bat }

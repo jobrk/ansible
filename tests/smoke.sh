@@ -125,6 +125,21 @@ tmux -L "$tmux_socket" -f "$HOME/.tmux.conf" new-session -d -s smoke -c "$test_r
 [[ $(tmux -L "$tmux_socket" display-message -p -t smoke '#S') == smoke ]] || fail 'Tmux configuration failed'
 pass 'Tmux server with configured plugins'
 
+if command -v i3 >/dev/null; then
+  step 'Checking i3 desktop configuration'
+  for executable in alacritty i3lock i3status nm-applet pactl xss-lock; do
+    require_command "$executable"
+  done
+  [[ -f "$HOME/.config/i3/config" ]] || fail 'i3 configuration is unavailable'
+  grep -qx 'Session=i3' "$HOME/.dmrc" || fail 'i3 is not the selected desktop session'
+  grep -Fqx 'set $term ~/.cargo/bin/alacritty' "$HOME/.config/i3/config" || fail 'Alacritty is not the i3 terminal'
+  i3 -C -c "$HOME/.config/i3/config" > "$test_root/i3-config.log" 2>&1 || {
+    sed -n '1,200p' "$test_root/i3-config.log" >&2
+    fail 'i3 configuration is invalid'
+  }
+  pass "$(i3 --version) with i3 selected as the desktop session"
+fi
+
 step 'Checking Bat theme'
 bat --list-themes | grep -qx 'Catppuccin-mocha' || fail 'Bat theme is unavailable'
 bat_warning=$(printf 'test\n' | bat --color=always --plain --language=txt 2>&1 >/dev/null)

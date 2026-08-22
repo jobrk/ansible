@@ -77,7 +77,7 @@ ansible-galaxy collection install -r requirements.yml > /dev/null
 
 set -- -i inventory.ini main.yml
 skip_tags="${SKIP_TAGS:-}"
-if [[ $OS != Darwin && -z ${DISPLAY:-}${WAYLAND_DISPLAY:-} && -z ${UI:-} ]]; then
+if [[ $OS != Darwin && -n ${SSH_CONNECTION:-}${SSH_TTY:-} && -z ${UI:-} ]]; then
   add_skip_tag ui
 fi
 

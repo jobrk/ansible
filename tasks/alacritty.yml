@@ -8,6 +8,13 @@
 
 - name: Install alacritty via cargo (Linux)
   when: ansible_facts['system'] == 'Linux' and not alacritty_binary.stat.exists
-  ansible.builtin.command: ~/.cargo/bin/cargo install alacritty
+  ansible.builtin.command:
+    argv:
+      - ~/.cargo/bin/cargo
+      - install
+      - --locked
+      - --jobs
+      - "1"
+      - alacritty
   changed_when: true
   tags: rust

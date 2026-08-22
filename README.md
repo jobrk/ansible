@@ -22,10 +22,14 @@ for root, passwordless sudo, or another non-interactive environment.
 
 The script installs ansible (pipx/brew, bootstrapping brew on a bare mac),
 clones or updates this repo, and runs the playbook with flags inferred from
-the machine: `ui` skipped on headless Linux (no `$DISPLAY`; force with
-`UI=1`), `-K` only when sudo needs a password and stdin is a tty, `become`
-skipped when non-interactive without sudo. Env overrides: `SKIP_TAGS`,
-`ANSIBLE_REPO`, `ANSIBLE_DEST`.
+the machine: `ui` skipped in SSH sessions (force with `UI=1`), `-K` only when
+sudo needs a password and stdin is a tty, `become` skipped when non-interactive
+without sudo. A local Linux console installs the complete i3 desktop. Env
+overrides: `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
+
+The Linux UI setup installs Xorg and i3, keeps an existing display manager or
+adds LightDM when needed, and selects i3 as the user's next desktop session.
+The dotfiles provide its configuration.
 
 Re-run any time to converge; a second run reports `changed=0`. Neovim follows
 the latest stable GitHub release and upgrades when that release changes.
@@ -47,8 +51,8 @@ Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
 Paste `cloud-init.yml` as user data at droplet creation. It creates the `josh`
 user with passwordless sudo, imports SSH keys from GitHub, and configures the
 `en_US.UTF-8` locale. It also prevents SSH clients from replacing that locale
-with one unavailable on the server, then runs the bootstrap script as `josh`.
-SSH in as `josh` after cloud-init finishes.
+with one unavailable on the server, then runs the bootstrap script without UI
+packages as `josh`. SSH in as `josh` after cloud-init finishes.
 
 ## Secrets
 
@@ -76,8 +80,9 @@ podman build --no-cache -f fedora.Dockerfile .
 ```
 
 Each image runs the playbook twice, requires `changed=0` on the second run, and
-runs `tests/smoke.sh`. The Debian image also runs the full cloud-init lifecycle
-and verifies its status, locale, user, and imported GitHub SSH keys. The
+runs `tests/smoke.sh`. Ubuntu and Debian exercise local-console UI provisioning;
+Debian also runs the headless cloud-init lifecycle and verifies its status,
+locale, user, and imported GitHub SSH keys. The
 playbook installs every Neovim plugin, Mason tool, and Tree-sitter parser; the
 smoke test verifies them and compiles and runs each language toolchain. It also
 validates shell/tmux setup and checks Corepack/pnpm, Bat, and repository
