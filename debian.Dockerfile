@@ -18,6 +18,9 @@ RUN cloud-init clean --logs && \
     ! grep -ER '^[[:space:]]*AcceptEnv[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d && \
     getent passwd josh >/dev/null && \
     test -s /home/josh/.ssh/authorized_keys && \
+    test -x /home/josh/.local/bin/nvim && \
+    test -f /home/josh/.local/state/nvim/provisioned && \
+    test "$(getent passwd josh | cut -d: -f7)" = /bin/zsh && \
     touch /cloud-init-test-passed
 
 FROM debian:13 AS base

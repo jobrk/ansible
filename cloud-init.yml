@@ -24,3 +24,4 @@ runcmd:
       find /etc/ssh/sshd_config.d -type f -name '*.conf' -exec sed -i -E '/^[[:space:]]*AcceptEnv[[:space:]]/d' {} +
     fi
     systemctl reload ssh 2>/dev/null || service ssh reload 2>/dev/null || true
+  - [sudo, -Hu, josh, bash, -c, "bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh)"]
