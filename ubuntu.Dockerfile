@@ -16,5 +16,6 @@ COPY --chown=jobrk . ./ansible
 RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --skip-tags ui
 RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --skip-tags ui | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
+RUN /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
 ENV TERM=xterm-256color
 CMD ["/bin/zsh"]

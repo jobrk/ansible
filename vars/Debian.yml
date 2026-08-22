@@ -5,6 +5,7 @@ core_packages:
   - cmake
   - curl
   - direnv
+  - dotnet-sdk-10.0
   - fd-find
   - fzf
   - git
@@ -15,7 +16,11 @@ core_packages:
   - libfreetype-dev
   - libxcb-xfixes0-dev
   - libxkbcommon-dev
+  - openjdk-25-jdk
+  - pipx
   - pkg-config
+  - python3
+  - python3-venv
   - ripgrep
   - stow
   - tmux

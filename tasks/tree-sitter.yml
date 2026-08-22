@@ -1,14 +1,17 @@
 ---
-- name: Check for tree-sitter CLI (Linux)
+- name: Check tree-sitter CLI version (Linux)
   when: ansible_facts['system'] == 'Linux'
-  ansible.builtin.stat:
-    path: ~/.local/bin/tree-sitter
-  register: tree_sitter_binary
+  ansible.builtin.command: ~/.local/bin/tree-sitter --version
+  register: tree_sitter_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
 
 - name: Install tree-sitter CLI release binary (Linux)
-  when: ansible_facts['system'] == 'Linux' and not tree_sitter_binary.stat.exists
+  when: >-
+    ansible_facts['system'] == 'Linux' and
+    (tree_sitter_check.rc != 0 or tree_sitter_version not in tree_sitter_check.stdout)
   vars:
-    tree_sitter_version: 0.26.11
     tree_sitter_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'x64' }}"
     tree_sitter_checksums:
       arm64: db28509fe6db8902f9d14c43c486858c7486b42c3a96b30e811e73f105762336

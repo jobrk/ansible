@@ -4,6 +4,7 @@ core_packages:
   - cmake
   - curl
   - direnv
+  - dotnet-sdk-10.0
   - fd-find
   - fzf
   - g++
@@ -12,12 +13,15 @@ core_packages:
   - git-delta
   - golang
   - jq
+  - java-25-openjdk-devel
   - fontconfig-devel
   - freetype-devel
   - libxcb-devel
   - libxkbcommon-devel
   - make
+  - pipx
   - pkg-config
+  - python3
   - ripgrep
   - stow
   - tmux

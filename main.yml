@@ -10,6 +10,7 @@
     bat_executable: >-
       {{ lookup('env', 'HOME') ~ '/.local/bin/bat'
          if ansible_facts['os_family'] == 'Debian' else 'bat' }}
+    tree_sitter_version: 0.26.11
   pre_tasks:
     - name: Load operating system variables
       ansible.builtin.include_vars: "vars/{{ ansible_facts['os_family'] }}.yml"
@@ -71,3 +72,8 @@
     - name: Machine-local templates
       ansible.builtin.import_tasks: tasks/templates.yml
       tags: dotfiles
+
+  handlers:
+    - name: Refresh font cache
+      ansible.builtin.command: fc-cache -f ~/.fonts
+      changed_when: true

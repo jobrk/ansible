@@ -33,6 +33,12 @@
   ansible.builtin.dnf:
     name: "{{ ui_packages }}"
 
+- name: Remove superseded Homebrew formulae
+  when: ansible_facts['os_family'] == 'Darwin'
+  community.general.homebrew:
+    name: "{{ obsolete_homebrew_packages }}"
+    state: absent
+
 - name: Install core packages (homebrew)
   when: ansible_facts['os_family'] == 'Darwin'
   community.general.homebrew:

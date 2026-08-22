@@ -14,7 +14,4 @@
         dest: ~/.fonts
         remote_src: true
         creates: ~/.fonts/IosevkaTermNerdFont-Regular.ttf
-
-    - name: Refresh font cache
-      ansible.builtin.command: fc-cache -f ~/.fonts
-      changed_when: false
+      notify: Refresh font cache

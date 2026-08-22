@@ -45,6 +45,7 @@
   register: fzf_zsh
   changed_when: false
   failed_when: false
+  check_mode: false
 
 - name: Install fzf shell integration
   ansible.builtin.copy:

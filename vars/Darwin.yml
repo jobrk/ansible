@@ -1,9 +1,14 @@
 ---
 homebrew_prefix: "{{ '/opt/homebrew' if ansible_facts['architecture'] == 'arm64' else '/usr/local' }}"
 
+obsolete_homebrew_packages:
+  - gradle
+  - openjdk
+
 core_packages:
   - bat
   - direnv
+  - dotnet
   - fd
   - fnm
   - fzf
@@ -13,6 +18,9 @@ core_packages:
   - go
   - jq
   - neovim
+  - openjdk@25
+  - pipx
+  - python@3.14
   - ripgrep
   - stow
   - stylua

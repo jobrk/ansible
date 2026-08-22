@@ -5,6 +5,9 @@ macOS). Installs packages, shell frameworks, and toolchains, then clones
 [jobrk/dotfiles](https://github.com/jobrk/dotfiles) and stows it. Config files
 live in dotfiles only — this repo owns machine state, never file content.
 
+The development toolchains include Go, Rust, Node LTS, .NET 10 LTS, Java 25
+LTS, Python with virtual environments and pipx, plus Tree-sitter and Neovim.
+
 ## Usage
 
 From an interactive shell on any machine (Debian/Ubuntu, Fedora/RHEL, macOS):
@@ -74,11 +77,13 @@ managed by Ansible.
 ## Testing
 
 ```sh
-podman build --no-cache -f ubuntu.Dockerfile .  # headless playbook + idempotency gate
+podman build --no-cache -f ubuntu.Dockerfile .
 podman build --no-cache -f fedora.Dockerfile .
 ```
 
-Use `docker` instead of `podman` when Docker is running.
+Each image runs the playbook twice, requires `changed=0` on the second run, and
+runs `tests/smoke.sh` against the toolchains, Bat theme, and Neovim. Use
+`docker` instead of `podman` when Docker is running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.
