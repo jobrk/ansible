@@ -10,12 +10,14 @@ core_packages:
   - git
   - git-absorb
   - git-delta
+  - go
   - jq
   - neovim
   - ripgrep
   - stow
   - stylua
   - tmux
+  - tree-sitter
   - zsh
 
 cask_packages:

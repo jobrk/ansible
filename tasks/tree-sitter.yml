@@ -1,0 +1,40 @@
+---
+- name: Check for tree-sitter CLI (Linux)
+  when: ansible_facts['system'] == 'Linux'
+  ansible.builtin.stat:
+    path: ~/.local/bin/tree-sitter
+  register: tree_sitter_binary
+
+- name: Install tree-sitter CLI release binary (Linux)
+  when: ansible_facts['system'] == 'Linux' and not tree_sitter_binary.stat.exists
+  vars:
+    tree_sitter_version: 0.26.11
+    tree_sitter_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'x64' }}"
+    tree_sitter_checksums:
+      arm64: db28509fe6db8902f9d14c43c486858c7486b42c3a96b30e811e73f105762336
+      x64: ff1b7f9863f2faafd78dc0e66d902ee85b37f709b314b22c009f51caf233eebd
+    tree_sitter_archive: "~/.local/bin/tree-sitter-cli.zip"
+  block:
+    - name: Download tree-sitter CLI
+      ansible.builtin.get_url:
+        url: >-
+          https://github.com/tree-sitter/tree-sitter/releases/download/v{{ tree_sitter_version }}/tree-sitter-cli-linux-{{ tree_sitter_arch }}.zip
+        dest: "{{ tree_sitter_archive }}"
+        checksum: "sha256:{{ tree_sitter_checksums[tree_sitter_arch] }}"
+        mode: "0644"
+
+    - name: Extract tree-sitter CLI
+      ansible.builtin.unarchive:
+        src: "{{ tree_sitter_archive }}"
+        dest: ~/.local/bin
+        remote_src: true
+
+    - name: Make tree-sitter CLI executable
+      ansible.builtin.file:
+        path: ~/.local/bin/tree-sitter
+        mode: "0755"
+
+    - name: Remove tree-sitter CLI archive
+      ansible.builtin.file:
+        path: "{{ tree_sitter_archive }}"
+        state: absent

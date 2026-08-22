@@ -27,6 +27,10 @@
       ansible.builtin.import_tasks: tasks/node.yml
       tags: node
 
+    - name: Tree-sitter
+      ansible.builtin.import_tasks: tasks/tree-sitter.yml
+      tags: neovim
+
     - name: Zsh
       ansible.builtin.import_tasks: tasks/zsh.yml
       tags: zsh

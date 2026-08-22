@@ -10,6 +10,7 @@ core_packages:
   - gcc
   - git
   - git-delta
+  - golang
   - jq
   - fontconfig-devel
   - freetype-devel

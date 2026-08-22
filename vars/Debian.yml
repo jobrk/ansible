@@ -9,6 +9,7 @@ core_packages:
   - fzf
   - git
   - git-delta
+  - golang-go
   - jq
   - libfontconfig1-dev
   - libfreetype-dev
