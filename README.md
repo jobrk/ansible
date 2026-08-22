@@ -69,7 +69,8 @@ managed by Ansible.
 
 ## After the playbook
 
-- launch `nvim` once (lazy.nvim bootstraps plugins, Mason pulls LSP servers)
+- launch `nvim` once and leave it open while plugins, all configured
+  Tree-sitter parsers, and Mason tools finish installing
 - inside tmux: `prefix + I` if tpm plugins didn't auto-install
 - edit the seeded `~/.gitconfig.local` (placeholder email) and other
   `*.local` files (templates come from dotfiles)
@@ -82,8 +83,10 @@ podman build --no-cache -f fedora.Dockerfile .
 ```
 
 Each image runs the playbook twice, requires `changed=0` on the second run, and
-runs `tests/smoke.sh` against the toolchains, Bat theme, and Neovim. Use
-`docker` instead of `podman` when Docker is running.
+runs `tests/smoke.sh`. The smoke test compiles and runs each language toolchain,
+installs every Mason tool and Tree-sitter parser, validates shell/tmux setup,
+and checks Bat and repository cleanliness. Use `docker` instead of `podman`
+when Docker is running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.
