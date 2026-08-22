@@ -64,8 +64,8 @@ managed by Ansible.
 
 ## After the playbook
 
-- launch `nvim` once and leave it open while plugins, all configured
-  Tree-sitter parsers, and Mason tools finish installing
+- launch `nvim`; its plugins, Tree-sitter parsers, and Mason tools are already
+  installed
 - inside tmux: `prefix + I` if tpm plugins didn't auto-install
 - edit the seeded `~/.gitconfig.local` (placeholder email) and other
   `*.local` files (templates come from dotfiles)
@@ -80,10 +80,11 @@ podman build --no-cache -f fedora.Dockerfile .
 
 Each image runs the playbook twice, requires `changed=0` on the second run, and
 runs `tests/smoke.sh`. The Debian image also runs the full cloud-init lifecycle
-and verifies its status, locale, user, and imported GitHub SSH keys. The smoke
-test compiles and runs each language toolchain, installs every Mason tool and
-Tree-sitter parser, validates shell/tmux setup, and checks Corepack/pnpm, Bat,
-and repository cleanliness. GitHub Actions runs these checks for Ubuntu,
+and verifies its status, locale, user, and imported GitHub SSH keys. The
+playbook installs every Neovim plugin, Mason tool, and Tree-sitter parser; the
+smoke test verifies them and compiles and runs each language toolchain. It also
+validates shell/tmux setup and checks Corepack/pnpm,
+Bat, and repository cleanliness. GitHub Actions runs these checks for Ubuntu,
 Debian, and Fedora, plus a native macOS job, on every push and pull request. Use
 `docker` instead of `podman` when Docker is running.
 

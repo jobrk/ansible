@@ -60,6 +60,10 @@
       ansible.builtin.import_tasks: tasks/dotfiles.yml
       tags: dotfiles
 
+    - name: Neovim plugins and tools
+      ansible.builtin.import_tasks: tasks/editor.yml
+      tags: neovim
+
     - name: Tmux
       ansible.builtin.import_tasks: tasks/tmux.yml
       tags: tmux

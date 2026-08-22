@@ -1,0 +1,60 @@
+---
+- name: Create Neovim state directory
+  ansible.builtin.file:
+    path: ~/.local/state/nvim
+    state: directory
+    mode: "0755"
+
+- name: Read Neovim config revision
+  ansible.builtin.command:
+    argv:
+      - git
+      - -C
+      - "{{ dotfiles_dest }}/nvim/.config/nvim"
+      - rev-parse
+      - HEAD
+  register: nvim_config_revision
+  changed_when: false
+  check_mode: false
+
+- name: Read installed Neovim version
+  ansible.builtin.command: ~/.local/bin/nvim --version
+  register: nvim_installed_version
+  changed_when: false
+  check_mode: false
+
+- name: Check Neovim provisioning state
+  vars:
+    nvim_provision_key: "{{ nvim_config_revision.stdout | trim }} {{ nvim_installed_version.stdout_lines[0] }}"
+  ansible.builtin.command:
+    argv:
+      - grep
+      - -Fqx
+      - "{{ nvim_provision_key }}"
+      - "{{ lookup('env', 'HOME') }}/.local/state/nvim/provisioned"
+  register: nvim_provision_state
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install Neovim plugins, parsers, and Mason tools
+  ansible.builtin.command:
+    argv:
+      - /bin/zsh
+      - -lic
+      - "{{ dotfiles_dest }}/nvim/.config/nvim/provision.sh"
+  when:
+    - nvim_provision_state.rc != 0
+    - not ansible_check_mode
+  changed_when: true
+
+- name: Record Neovim provisioning state
+  vars:
+    nvim_provision_key: "{{ nvim_config_revision.stdout | trim }} {{ nvim_installed_version.stdout_lines[0] }}"
+  ansible.builtin.copy:
+    content: "{{ nvim_provision_key }}\n"
+    dest: ~/.local/state/nvim/provisioned
+    mode: "0644"
+  when:
+    - nvim_provision_state.rc != 0
+    - not ansible_check_mode

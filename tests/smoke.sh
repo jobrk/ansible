@@ -32,32 +32,6 @@ check_log() {
   fi
 }
 
-run_with_timeout() {
-  local log=$1
-  local seconds=$2
-  shift 2
-
-  python3 - "$log" "$seconds" "$@" <<'PY'
-import subprocess
-import sys
-
-log, seconds, *command = sys.argv[1:]
-with open(log, "w", encoding="utf-8") as output:
-    try:
-        result = subprocess.run(
-            command,
-            stdout=output,
-            stderr=subprocess.STDOUT,
-            timeout=int(seconds),
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        output.write(f"command timed out after {seconds} seconds\n")
-        raise SystemExit(124)
-raise SystemExit(result.returncode)
-PY
-}
-
 printf 'Smoke test: %s %s\n' "$(uname -s)" "$(uname -m)"
 
 step 'Checking required commands'
@@ -152,20 +126,49 @@ bat_warning=$(printf 'test\n' | bat --color=always --plain --language=txt 2>&1 >
 [[ -z $bat_warning ]] || fail "Bat emitted: $bat_warning"
 pass 'Catppuccin-mocha renders without warnings'
 
-step 'Checking Neovim first launch'
-nvim --headless +qa > "$test_root/nvim-first-run.log" 2>&1 || {
-  sed -n '1,200p' "$test_root/nvim-first-run.log" >&2
-  fail 'Neovim first launch failed'
+step 'Checking clean Neovim startup'
+nvim --headless +qa > "$test_root/nvim-startup.log" 2>&1 || {
+  sed -n '1,200p' "$test_root/nvim-startup.log" >&2
+  fail 'Neovim startup failed'
 }
-check_log "$test_root/nvim-first-run.log" 'Neovim first launch'
+check_log "$test_root/nvim-startup.log" 'Neovim startup'
 pass 'Neovim started without warnings or errors'
 
-step 'Installing and checking Mason tools (up to 15 minutes)'
-run_with_timeout "$test_root/mason.log" 900 nvim --headless '+MasonToolsInstallSync' +qa || {
-  sed -n '1,200p' "$test_root/mason.log" >&2
-  fail 'Mason tool installation failed or timed out'
+step 'Checking Neovim plugins were provisioned'
+cat > "$test_root/check-plugins.lua" <<'LUA'
+local missing = {}
+for name, plugin in pairs(require('lazy.core.config').plugins) do
+  if plugin.enabled ~= false and plugin.dir and not vim.uv.fs_stat(plugin.dir) then
+    table.insert(missing, name)
+  end
+end
+table.sort(missing)
+assert(#missing == 0, 'missing Neovim plugins: ' .. table.concat(missing, ', '))
+LUA
+nvim --headless "+luafile $test_root/check-plugins.lua" +qa > "$test_root/nvim-plugins.log" 2>&1 || {
+  sed -n '1,200p' "$test_root/nvim-plugins.log" >&2
+  fail 'Neovim plugin verification failed'
 }
-check_log "$test_root/mason.log" 'Mason tool installation'
+check_log "$test_root/nvim-plugins.log" 'Neovim plugin verification'
+pass 'All configured Neovim plugins installed'
+
+step 'Checking Mason tools were provisioned'
+cat > "$test_root/check-mason.lua" <<'LUA'
+local registry = require 'mason-registry'
+local missing = {}
+for _, name in ipairs(require('tooling').mason) do
+  local ok, package = pcall(registry.get_package, name)
+  if not ok or not package:is_installed() then
+    table.insert(missing, name)
+  end
+end
+assert(#missing == 0, 'missing Mason tools: ' .. table.concat(missing, ', '))
+LUA
+nvim --headless "+luafile $test_root/check-mason.lua" +qa > "$test_root/nvim-mason.log" 2>&1 || {
+  sed -n '1,200p' "$test_root/nvim-mason.log" >&2
+  fail 'Mason tool verification failed'
+}
+check_log "$test_root/nvim-mason.log" 'Mason tool verification'
 pass 'All configured Mason tools installed'
 
 step 'Checking Java editor integration'
@@ -191,13 +194,7 @@ pass 'JDTLS, Java debugging, and Java test bundles'
 
 step 'Checking Tree-sitter parsers'
 cat > "$test_root/check-parsers.lua" <<'LUA'
-local parsers = {
-  'bash', 'c', 'c_sharp', 'css', 'diff', 'dockerfile', 'gitignore', 'git_rebase',
-  'go', 'graphql', 'groovy', 'html', 'ini', 'javascript', 'jinja', 'jinja_inline',
-  'json', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'powershell', 'proto',
-  'puppet', 'python', 'query', 'rust', 'sql', 'toml', 'tsx', 'typescript', 'vim',
-  'vimdoc', 'xml', 'yaml', 'zsh',
-}
+local parsers = require('tooling').treesitter
 local missing = vim.tbl_filter(function(parser)
   return not pcall(vim.treesitter.language.inspect, parser)
 end, parsers)
@@ -209,7 +206,7 @@ nvim --headless "+luafile $test_root/check-parsers.lua" +qa > "$test_root/nvim-p
   fail 'Tree-sitter parser verification failed'
 }
 check_log "$test_root/nvim-parsers.log" 'Tree-sitter parser verification'
-pass '36 configured parsers installed'
+pass 'All configured Tree-sitter parsers installed'
 
 step 'Checking repository cleanliness'
 [[ -z $(git -C "$HOME/projects/dotfiles" status --porcelain) ]] || fail 'Dotfiles worktree is dirty'
