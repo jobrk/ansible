@@ -25,6 +25,7 @@ RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'command = "/usr/sbin/agreety --cmd /usr/bin/start-hyprland"' /etc/greetd/config.toml && \
     test -x /usr/sbin/agreety && \
     test -x /usr/bin/start-hyprland && \
+    systemctl get-default | grep -qx graphical.target && \
     systemctl is-enabled greetd | grep -qx enabled
 USER jobrk
 RUN /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'

@@ -283,6 +283,24 @@
     name: greetd
     enabled: true
 
+- name: Read the default systemd target
+  tags: ui
+  when: ansible_facts['system'] == 'Linux'
+  ansible.builtin.command: systemctl get-default
+  register: default_systemd_target
+  changed_when: false
+
+- name: Boot Linux UI machines into the graphical target
+  become: true
+  tags:
+    - become
+    - ui
+  when:
+    - ansible_facts['system'] == 'Linux'
+    - default_systemd_target.stdout != 'graphical.target'
+  ansible.builtin.command: systemctl set-default graphical.target
+  changed_when: true
+
 - name: Create AccountsService user directory
   become: true
   tags:
