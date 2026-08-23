@@ -143,6 +143,9 @@ grep -Fqx '    pref("zen.view.compact.enable-at-startup", true);' "$zen_profile"
 grep -Fqx '    pref("zen.tabs.vertical.right-side", true);' "$zen_profile" || fail 'Zen right-side tabs default is unavailable'
 grep -Fqx '    pref("zen.glance.enabled", false);' "$zen_profile" || fail 'Zen Glance default is unavailable'
 grep -Fqx '    pref("layout.css.prefers-color-scheme.content-override", 0);' "$zen_profile" || fail 'Zen dark content default is unavailable'
+grep -Fqx '    pref("findbar.highlightAll", true);' "$zen_profile" || fail 'Zen highlight-all search preference is unavailable'
+grep -Fqx '    pref("pdfjs.enableAltTextForEnglish", true);' "$zen_profile" || fail 'Zen PDF alt-text preference is unavailable'
+grep -Fqx '    pref("privacy.clearOnShutdown_v2.formdata", true);' "$zen_profile" || fail 'Zen form-data cleanup preference is unavailable'
 pass 'Portable preferences and Dark Reader, uBlock Origin, and Vimium policies'
 
 if command -v Hyprland >/dev/null; then
@@ -199,9 +202,14 @@ if command -v Hyprland >/dev/null; then
     fail 'Zen first launch failed'
   }
   zen_prefs="$test_root/zen-profile/prefs.js"
-  grep -Fqx 'user_pref("jobrk.zen.config-version", 1);' "$zen_prefs" || fail 'Zen profile defaults were not imported'
+  grep -Fqx 'user_pref("jobrk.zen.config-version", 2);' "$zen_prefs" || fail 'Zen profile defaults were not imported'
   grep -Fqx 'user_pref("zen.tabs.vertical.right-side", true);' "$zen_prefs" || fail 'Zen right-side tabs were not imported'
   grep -Fqx 'user_pref("zen.view.compact.enable-at-startup", true);' "$zen_prefs" || fail 'Zen compact mode was not imported'
+  grep -Fqx 'user_pref("browser.preferences.experimental.hidden", true);' "$zen_prefs" || fail 'Zen experimental-settings preference was not imported'
+  grep -Fqx 'user_pref("findbar.highlightAll", true);' "$zen_prefs" || fail 'Zen highlight-all search preference was not imported'
+  grep -Fqx 'user_pref("pdfjs.enableAltTextForEnglish", true);' "$zen_prefs" || fail 'Zen PDF alt-text preference was not imported'
+  grep -Fqx 'user_pref("privacy.clearOnShutdown_v2.formdata", true);' "$zen_prefs" || fail 'Zen form-data cleanup preference was not imported'
+  grep -Fqx 'user_pref("privacy.history.custom", true);' "$zen_prefs" || fail 'Zen custom-history preference was not imported'
   sed -i 's/user_pref("zen.glance.enabled", false);/user_pref("zen.glance.enabled", true);/' "$zen_prefs"
   timeout 45 zen --headless --no-remote --profile "$test_root/zen-profile" \
     --screenshot "$test_root/zen-second.png" 'data:text/html,smoke' > "$test_root/zen-second.log" 2>&1 || {
