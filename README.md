@@ -27,9 +27,10 @@ sudo needs a password and stdin is a tty, `become` skipped when non-interactive
 without sudo. A local Linux console installs the complete Hyprland desktop. Env
 overrides: `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
-The Linux UI setup installs Wayland and Hyprland, keeps an existing compatible
-display manager or adds greetd when needed, and selects Hyprland as the user's
-next desktop session. The dotfiles provide its configuration.
+The Linux UI setup installs Hyprland with portals, audio, notifications,
+graphical authentication, and Qt Wayland support. It keeps an existing
+compatible display manager or adds greetd when needed, then selects Hyprland
+as the user's next desktop session. The dotfiles provide its configuration.
 
 Re-run any time to converge; a second run reports `changed=0`. Neovim follows
 the latest stable GitHub release and upgrades when that release changes.

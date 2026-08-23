@@ -127,9 +127,11 @@ pass 'Tmux server with configured plugins'
 
 if command -v Hyprland >/dev/null; then
   step 'Checking Hyprland desktop configuration'
-  for executable in alacritty Hyprland hyprctl hypridle hyprlock wofi wpctl; do
+  for executable in alacritty Hyprland hyprctl hypridle hyprland-dialog hyprlock mako wofi wpctl; do
     require_command "$executable"
   done
+  [[ -f /usr/lib/systemd/user/hyprpolkitagent.service ]] || fail 'Hyprland polkit agent service is unavailable'
+  [[ -f /usr/lib/systemd/user/mako.service ]] || fail 'Mako notification service is unavailable'
   [[ -f "$HOME/.config/hypr/hyprland.conf" ]] || fail 'Hyprland configuration is unavailable'
   grep -qx 'Session=hyprland' "$HOME/.dmrc" || fail 'Hyprland is not the selected desktop session'
   grep -Fqx '$term = ~/.cargo/bin/alacritty' "$HOME/.config/hypr/hyprland.conf" || fail 'Alacritty is not the Hyprland terminal'
@@ -137,6 +139,7 @@ if command -v Hyprland >/dev/null; then
   grep -Fqx '    gaps_in = 6' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland inner gaps are incorrect'
   grep -Fqx '    gaps_out = 0' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland outer gaps are incorrect'
   grep -Fqx '    background_color = rgb(000000)' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland background is not black'
+  grep -Fqx 'exec-once = systemctl --user start hyprpolkitagent' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland polkit agent is not started'
   mkdir -m 700 "$test_root/runtime"
   XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --verify-config \
     --config "$HOME/.config/hypr/hyprland.conf" > "$test_root/hyprland-config.log" 2>&1 || {
@@ -145,7 +148,7 @@ if command -v Hyprland >/dev/null; then
   }
   hyprland_version=$(XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --version 2>/dev/null | sed -n '1p')
   [[ -n $hyprland_version ]] || fail 'Hyprland version is unavailable'
-  pass "$hyprland_version with adaptive displays and Hyprland selected"
+  pass "$hyprland_version with GUI dialogs, notifications, polkit, adaptive displays, and Hyprland selected"
 fi
 
 step 'Checking Bat theme'

@@ -34,9 +34,14 @@ ui_packages:
   - dbus-user-session
   - hypridle
   - hyprland
+  - hyprland-qtutils
   - hyprlock
+  - hyprpolkitagent
+  - mako-notifier
   - network-manager
   - pipewire-audio
+  - qt6-wayland
+  - qtwayland5
   - wireplumber
   - wofi
   - xdg-desktop-portal-gtk

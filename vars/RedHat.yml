@@ -31,9 +31,14 @@ core_packages:
 ui_packages:
   - hypridle
   - hyprland
+  - hyprland-guiutils
   - hyprlock
+  - hyprpolkitagent
+  - mako
   - NetworkManager
   - pipewire
+  - qt5-qtwayland
+  - qt6-qtwayland
   - wireplumber
   - wofi
   - xdg-desktop-portal-gtk

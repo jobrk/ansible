@@ -24,6 +24,7 @@ RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'user = "greetd"' /etc/greetd/config.toml && \
     test -x /usr/bin/agreety && \
     test -x /usr/bin/start-hyprland && \
+    rpm -q hyprland-guiutils hyprpolkitagent mako qt5-qtwayland qt6-qtwayland && \
     systemctl get-default | grep -qx graphical.target && \
     systemctl is-enabled greetd | grep -qx enabled
 USER jobrk
