@@ -47,6 +47,7 @@ display_manager_packages:
   - greetd
 greetd_user: _greetd
 greetd_vt: 7
+agreety_path: /usr/sbin/agreety
 
 binary_symlinks:
   - { src: /usr/bin/batcat, dest: ~/.local/bin/bat }

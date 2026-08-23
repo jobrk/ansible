@@ -20,7 +20,10 @@ RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml 
 USER root
 RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'vt = 1' /etc/greetd/config.toml && \
+    grep -qx 'command = "/usr/bin/agreety --cmd /usr/bin/start-hyprland"' /etc/greetd/config.toml && \
     grep -qx 'user = "greetd"' /etc/greetd/config.toml && \
+    test -x /usr/bin/agreety && \
+    test -x /usr/bin/start-hyprland && \
     systemctl is-enabled greetd | grep -qx enabled
 USER jobrk
 RUN /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'

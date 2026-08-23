@@ -178,6 +178,10 @@
     install_greetd: >-
       {{ not display_manager_service.stat.exists or
          'lightdm' in (display_manager_service.stat.lnk_source | default('')) }}
+    manage_greetd: >-
+      {{ not display_manager_service.stat.exists or
+         'lightdm' in (display_manager_service.stat.lnk_source | default('')) or
+         'greetd' in (display_manager_service.stat.lnk_source | default('')) }}
 
 - name: Install UI packages (apt)
   become: true
@@ -253,7 +257,7 @@
     - ui
   when:
     - ansible_facts['system'] == 'Linux'
-    - install_greetd
+    - manage_greetd
   ansible.builtin.copy:
     dest: /etc/greetd/config.toml
     content: |
@@ -261,20 +265,20 @@
       vt = {{ greetd_vt }}
 
       [default_session]
-      command = "agreety --cmd start-hyprland"
+      command = "{{ agreety_path }} --cmd /usr/bin/start-hyprland"
       user = "{{ greetd_user }}"
     owner: root
     group: root
     mode: "0644"
 
-- name: Enable greetd when installed by this playbook
+- name: Ensure the managed greetd service is enabled
   become: true
   tags:
     - become
     - ui
   when:
     - ansible_facts['system'] == 'Linux'
-    - install_greetd
+    - manage_greetd
   ansible.builtin.systemd_service:
     name: greetd
     enabled: true

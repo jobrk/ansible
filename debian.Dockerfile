@@ -47,6 +47,9 @@ RUN ./ansible/bootstrap.sh | tee /tmp/second-run.log && \
 USER root
 RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'vt = 7' /etc/greetd/config.toml && \
+    grep -qx 'command = "/usr/sbin/agreety --cmd /usr/bin/start-hyprland"' /etc/greetd/config.toml && \
+    test -x /usr/sbin/agreety && \
+    test -x /usr/bin/start-hyprland && \
     systemctl is-enabled greetd | grep -qx enabled && \
     setcap -r /usr/bin/Hyprland
 USER jobrk

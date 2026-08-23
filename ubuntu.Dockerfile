@@ -22,6 +22,9 @@ RUN (sleep 5; printf 'testpass\n') | script -qec './ansible/bootstrap.sh' /tmp/s
 USER root
 RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'vt = 7' /etc/greetd/config.toml && \
+    grep -qx 'command = "/usr/sbin/agreety --cmd /usr/bin/start-hyprland"' /etc/greetd/config.toml && \
+    test -x /usr/sbin/agreety && \
+    test -x /usr/bin/start-hyprland && \
     systemctl is-enabled greetd | grep -qx enabled
 USER jobrk
 RUN /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'

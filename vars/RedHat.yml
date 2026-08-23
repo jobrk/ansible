@@ -44,5 +44,6 @@ display_manager_packages:
   - greetd
 greetd_user: greetd
 greetd_vt: 1
+agreety_path: /usr/bin/agreety
 
 binary_symlinks: []
