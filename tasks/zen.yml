@@ -120,6 +120,19 @@
       Name=Open a New Private Window
       Exec={{ zen_install_dir }}/zen --private-window %u
 
+- name: Create Zen Browser distribution directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/distribution"
+    state: directory
+    mode: "0755"
+
+- name: Apply portable Zen Browser settings
+  ansible.builtin.file:
+    src: "{{ lookup('env', 'HOME') }}/.config/zen/policies.json"
+    dest: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/distribution/policies.json"
+    state: link
+    force: true
+
 - name: Create local configuration directory
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config"

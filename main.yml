@@ -51,11 +51,6 @@
       ansible.builtin.import_tasks: tasks/alacritty.yml
       tags: ui
 
-    - name: Zen Browser
-      ansible.builtin.import_tasks: tasks/zen.yml
-      when: ansible_facts['system'] == 'Linux'
-      tags: ui
-
     - name: MacOS extras
       ansible.builtin.import_tasks: tasks/macos.yml
       when: ansible_facts['system'] == 'Darwin'
@@ -64,6 +59,11 @@
     - name: Dotfiles
       ansible.builtin.import_tasks: tasks/dotfiles.yml
       tags: dotfiles
+
+    - name: Zen Browser
+      ansible.builtin.import_tasks: tasks/zen.yml
+      when: ansible_facts['system'] == 'Linux'
+      tags: ui
 
     - name: Neovim plugins and tools
       ansible.builtin.import_tasks: tasks/editor.yml

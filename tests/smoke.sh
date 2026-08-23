@@ -125,6 +125,20 @@ tmux -L "$tmux_socket" -f "$HOME/.tmux.conf" new-session -d -s smoke -c "$test_r
 [[ $(tmux -L "$tmux_socket" display-message -p -t smoke '#S') == smoke ]] || fail 'Tmux configuration failed'
 pass 'Tmux server with configured plugins'
 
+step 'Checking Zen Browser defaults'
+zen_defaults="$HOME/.config/zen/policies.json"
+[[ -f $zen_defaults ]] || fail 'Zen Browser defaults are unavailable'
+jq -e '
+  .policies.Preferences["zen.view.compact.enable-at-startup"].Value == true and
+  .policies.Preferences["zen.tabs.vertical.right-side"].Value == true and
+  .policies.Preferences["zen.glance.enabled"].Value == false and
+  .policies.Preferences["layout.css.prefers-color-scheme.content-override"].Value == 0 and
+  .policies.ExtensionSettings["addon@darkreader.org"].installation_mode == "normal_installed" and
+  .policies.ExtensionSettings["uBlock0@raymondhill.net"].installation_mode == "normal_installed" and
+  .policies.ExtensionSettings["{d7742d87-e61d-4b78-b8a1-b469842139fa}"].installation_mode == "normal_installed"
+' "$zen_defaults" >/dev/null || fail 'Zen Browser defaults do not match the Mac profile'
+pass 'Portable preferences and Dark Reader, uBlock Origin, and Vimium policies'
+
 if command -v Hyprland >/dev/null; then
   step 'Checking Hyprland desktop configuration'
   for executable in alacritty cliphist Hyprland hyprctl hypridle hyprland-dialog hyprlock \
@@ -152,6 +166,8 @@ if command -v Hyprland >/dev/null; then
   grep -Fqx '    background: #000000;' "$HOME/.config/waybar/style.css" || fail 'Waybar background is not black'
   grep -Fqx 'background-color=#000000' "$HOME/.config/mako/config" || fail 'Mako background is not black'
   grep -Fqx 'x-scheme-handler/https=zen.desktop' "$HOME/.config/mimeapps.list" || fail 'Zen Browser is not the HTTPS default'
+  zen_policy="$HOME/.tarball-installations/zen/distribution/policies.json"
+  [[ -L $zen_policy ]] || fail 'Zen Browser policy is not linked from dotfiles'
   mkdir -m 700 "$test_root/runtime"
   XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --verify-config \
     --config "$HOME/.config/hypr/hyprland.conf" > "$test_root/hyprland-config.log" 2>&1 || {
