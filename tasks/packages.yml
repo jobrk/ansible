@@ -106,6 +106,79 @@
     - sshd_config.stat.exists
   notify: Reload SSH
 
+- name: Enable Debian backports for Hyprland
+  become: true
+  tags:
+    - become
+    - ui
+  when: ansible_facts['distribution'] == 'Debian'
+  ansible.builtin.copy:
+    dest: "/etc/apt/sources.list.d/{{ ansible_facts['distribution_release'] }}-backports.list"
+    content: >-
+      deb http://deb.debian.org/debian
+      {{ ansible_facts['distribution_release'] }}-backports main
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Refresh apt metadata for Debian backports
+  become: true
+  tags:
+    - become
+    - ui
+  when: ansible_facts['distribution'] == 'Debian'
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install Fedora repository tooling
+  become: true
+  tags:
+    - become
+    - ui
+  when: ansible_facts['os_family'] == 'RedHat'
+  ansible.builtin.dnf:
+    name: dnf-plugins-core
+
+- name: Check for the Hyprland COPR
+  tags: ui
+  when: ansible_facts['os_family'] == 'RedHat'
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lionheartp:Hyprland.repo
+  register: hyprland_copr
+
+- name: Enable the Hyprland COPR
+  become: true
+  tags:
+    - become
+    - ui
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+    - not hyprland_copr.stat.exists
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - lionheartp/Hyprland
+  changed_when: true
+
+- name: Check for an existing display manager
+  tags: ui
+  when: ansible_facts['system'] == 'Linux'
+  ansible.builtin.stat:
+    path: /etc/systemd/system/display-manager.service
+    follow: false
+  register: display_manager_service
+
+- name: Decide whether greetd should replace the display manager
+  tags: ui
+  when: ansible_facts['system'] == 'Linux'
+  ansible.builtin.set_fact:
+    install_greetd: >-
+      {{ not display_manager_service.stat.exists or
+         'lightdm' in (display_manager_service.stat.lnk_source | default('')) }}
+
 - name: Install UI packages (apt)
   become: true
   tags:
@@ -113,6 +186,10 @@
     - ui
   when: ansible_facts['os_family'] == 'Debian'
   ansible.builtin.apt:
+    update_cache: true
+    default_release: >-
+      {{ ansible_facts['distribution_release'] ~ '-backports'
+         if ansible_facts['distribution'] == 'Debian' else omit }}
     name: "{{ ui_packages }}"
 
 - name: Install core packages (dnf)
@@ -132,34 +209,74 @@
   ansible.builtin.dnf:
     name: "{{ ui_packages }}"
 
-- name: Check for an existing display manager
-  tags: ui
-  when: ansible_facts['system'] == 'Linux'
-  ansible.builtin.stat:
-    path: /etc/systemd/system/display-manager.service
-  register: display_manager_service
-
-- name: Install LightDM when no display manager exists
+- name: Disable the retired LightDM service
   become: true
   tags:
     - become
     - ui
   when:
     - ansible_facts['system'] == 'Linux'
-    - not display_manager_service.stat.exists
+    - install_greetd
+    - display_manager_service.stat.exists
+  ansible.builtin.systemd_service:
+    name: lightdm
+    enabled: false
+
+- name: Remove the retired LightDM display manager link
+  become: true
+  tags:
+    - become
+    - ui
+  when:
+    - ansible_facts['system'] == 'Linux'
+    - install_greetd
+    - display_manager_service.stat.exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/display-manager.service
+    state: absent
+
+- name: Install greetd when no Wayland display manager exists
+  become: true
+  tags:
+    - become
+    - ui
+  when:
+    - ansible_facts['system'] == 'Linux'
+    - install_greetd
   ansible.builtin.package:
     name: "{{ display_manager_packages }}"
 
-- name: Enable LightDM when installed by this playbook
+- name: Configure the minimal greetd login
   become: true
   tags:
     - become
     - ui
   when:
     - ansible_facts['system'] == 'Linux'
-    - not display_manager_service.stat.exists
+    - install_greetd
+  ansible.builtin.copy:
+    dest: /etc/greetd/config.toml
+    content: |
+      [terminal]
+      vt = {{ greetd_vt }}
+
+      [default_session]
+      command = "agreety --cmd start-hyprland"
+      user = "{{ greetd_user }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable greetd when installed by this playbook
+  become: true
+  tags:
+    - become
+    - ui
+  when:
+    - ansible_facts['system'] == 'Linux'
+    - install_greetd
   ansible.builtin.systemd_service:
-    name: lightdm
+    name: greetd
     enabled: true
 
 - name: Create AccountsService user directory
@@ -175,7 +292,7 @@
     group: root
     mode: "0755"
 
-- name: Select i3 as the default desktop session
+- name: Select Hyprland as the default desktop session
   become: true
   tags:
     - become
@@ -185,7 +302,7 @@
     path: "/var/lib/AccountsService/users/{{ ansible_facts['user_id'] }}"
     section: User
     option: XSession
-    value: i3
+    value: hyprland
     owner: root
     group: root
     mode: "0600"

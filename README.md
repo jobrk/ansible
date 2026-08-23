@@ -24,12 +24,12 @@ The script installs ansible (pipx/brew, bootstrapping brew on a bare mac),
 clones or updates this repo, and runs the playbook with flags inferred from
 the machine: `ui` skipped in SSH sessions (force with `UI=1`), `-K` only when
 sudo needs a password and stdin is a tty, `become` skipped when non-interactive
-without sudo. A local Linux console installs the complete i3 desktop. Env
+without sudo. A local Linux console installs the complete Hyprland desktop. Env
 overrides: `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
-The Linux UI setup installs Xorg and i3, keeps an existing display manager or
-adds LightDM when needed, and selects i3 as the user's next desktop session.
-The dotfiles provide its configuration.
+The Linux UI setup installs Wayland and Hyprland, keeps an existing compatible
+display manager or adds greetd when needed, and selects Hyprland as the user's
+next desktop session. The dotfiles provide its configuration.
 
 Re-run any time to converge; a second run reports `changed=0`. Neovim follows
 the latest stable GitHub release and upgrades when that release changes.
@@ -80,12 +80,12 @@ podman build --no-cache -f fedora.Dockerfile .
 ```
 
 Each image runs the playbook twice, requires `changed=0` on the second run, and
-runs `tests/smoke.sh`. Ubuntu and Debian exercise local-console UI provisioning;
-Debian also runs the headless cloud-init lifecycle and verifies its status,
+runs `tests/smoke.sh`. All three exercise local-console UI provisioning; Debian
+also runs the headless cloud-init lifecycle and verifies its status,
 locale, user, and imported GitHub SSH keys. The
 playbook installs every Neovim plugin, Mason tool, and Tree-sitter parser; the
 smoke test verifies them and compiles and runs each language toolchain. It also
-validates shell/tmux setup and checks Corepack/pnpm, Bat, and repository
+validates the Hyprland config, shell/tmux setup, and checks Corepack/pnpm, Bat, and repository
 cleanliness. GitHub Actions runs these checks for Ubuntu,
 Debian, and Fedora, plus a native macOS job, on every push and pull request. Use
 `docker` instead of `podman` when Docker is running.

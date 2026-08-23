@@ -29,18 +29,20 @@ core_packages:
   - zsh
 
 ui_packages:
-  - dmenu
-  - i3
-  - i3lock
-  - i3status
-  - network-manager-applet
-  - pulseaudio-utils
-  - xorg-x11-server-Xorg
-  - xorg-x11-xinit
-  - xss-lock
+  - hypridle
+  - hyprland
+  - hyprlock
+  - NetworkManager
+  - pipewire
+  - wireplumber
+  - wofi
+  - xdg-desktop-portal-gtk
+  - xdg-desktop-portal-hyprland
+  - xorg-x11-server-Xwayland
 
 display_manager_packages:
-  - lightdm
-  - lightdm-gtk
+  - greetd
+greetd_user: greetd
+greetd_vt: 1
 
 binary_symlinks: []

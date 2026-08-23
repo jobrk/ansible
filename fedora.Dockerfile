@@ -14,9 +14,15 @@ WORKDIR /home/jobrk
 FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
-RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --skip-tags ui
-RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --skip-tags ui | tee /tmp/second-run.log && \
+RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml
+RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
+USER root
+RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
+    grep -qx 'vt = 1' /etc/greetd/config.toml && \
+    grep -qx 'user = "greetd"' /etc/greetd/config.toml && \
+    systemctl is-enabled greetd | grep -qx enabled
+USER jobrk
 RUN /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
 ENV TERM=xterm-256color
 CMD ["/bin/zsh"]

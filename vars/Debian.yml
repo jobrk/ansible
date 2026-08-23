@@ -31,18 +31,22 @@ core_packages:
   - zsh
 
 ui_packages:
-  - dmenu
-  - i3
-  - i3lock
-  - i3status
-  - network-manager-gnome
-  - pulseaudio-utils
-  - xss-lock
-  - xorg
+  - dbus-user-session
+  - hypridle
+  - hyprland
+  - hyprlock
+  - network-manager
+  - pipewire-audio
+  - wireplumber
+  - wofi
+  - xdg-desktop-portal-gtk
+  - xdg-desktop-portal-hyprland
+  - xwayland
 
 display_manager_packages:
-  - lightdm
-  - lightdm-gtk-greeter
+  - greetd
+greetd_user: _greetd
+greetd_vt: 7
 
 binary_symlinks:
   - { src: /usr/bin/batcat, dest: ~/.local/bin/bat }

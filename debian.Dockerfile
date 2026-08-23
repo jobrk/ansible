@@ -19,7 +19,7 @@ RUN cloud-init clean --logs && \
     getent passwd josh >/dev/null && \
     test -s /home/josh/.ssh/authorized_keys && \
     test -x /home/josh/.local/bin/nvim && \
-    ! test -x /usr/bin/i3 && \
+    ! test -x /usr/bin/Hyprland && \
     test -f /home/josh/.local/state/nvim/provisioned && \
     test "$(getent passwd josh | cut -d: -f7)" = /bin/zsh && \
     touch /cloud-init-test-passed
@@ -45,8 +45,10 @@ RUN ./ansible/bootstrap.sh
 RUN ./ansible/bootstrap.sh | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 USER root
-RUN grep -qx 'XSession=i3' /var/lib/AccountsService/users/jobrk && \
-    test -L /etc/systemd/system/display-manager.service
+RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
+    grep -qx 'vt = 7' /etc/greetd/config.toml && \
+    systemctl is-enabled greetd | grep -qx enabled && \
+    setcap -r /usr/bin/Hyprland
 USER jobrk
 RUN /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
 ENV TERM=xterm-256color

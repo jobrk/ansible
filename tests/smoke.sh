@@ -125,19 +125,27 @@ tmux -L "$tmux_socket" -f "$HOME/.tmux.conf" new-session -d -s smoke -c "$test_r
 [[ $(tmux -L "$tmux_socket" display-message -p -t smoke '#S') == smoke ]] || fail 'Tmux configuration failed'
 pass 'Tmux server with configured plugins'
 
-if command -v i3 >/dev/null; then
-  step 'Checking i3 desktop configuration'
-  for executable in alacritty i3lock i3status nm-applet pactl xss-lock; do
+if command -v Hyprland >/dev/null; then
+  step 'Checking Hyprland desktop configuration'
+  for executable in alacritty Hyprland hyprctl hypridle hyprlock wofi wpctl; do
     require_command "$executable"
   done
-  [[ -f "$HOME/.config/i3/config" ]] || fail 'i3 configuration is unavailable'
-  grep -qx 'Session=i3' "$HOME/.dmrc" || fail 'i3 is not the selected desktop session'
-  grep -Fqx 'set $term ~/.cargo/bin/alacritty' "$HOME/.config/i3/config" || fail 'Alacritty is not the i3 terminal'
-  i3 -C -c "$HOME/.config/i3/config" > "$test_root/i3-config.log" 2>&1 || {
-    sed -n '1,200p' "$test_root/i3-config.log" >&2
-    fail 'i3 configuration is invalid'
+  [[ -f "$HOME/.config/hypr/hyprland.conf" ]] || fail 'Hyprland configuration is unavailable'
+  grep -qx 'Session=hyprland' "$HOME/.dmrc" || fail 'Hyprland is not the selected desktop session'
+  grep -Fqx '$term = ~/.cargo/bin/alacritty' "$HOME/.config/hypr/hyprland.conf" || fail 'Alacritty is not the Hyprland terminal'
+  grep -Fqx 'monitor = , preferred, auto, auto' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland does not use each display preferred mode and automatic scale'
+  grep -Fqx '    gaps_in = 6' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland inner gaps are incorrect'
+  grep -Fqx '    gaps_out = 0' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland outer gaps are incorrect'
+  grep -Fqx '    background_color = rgb(000000)' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland background is not black'
+  mkdir -m 700 "$test_root/runtime"
+  XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --verify-config \
+    --config "$HOME/.config/hypr/hyprland.conf" > "$test_root/hyprland-config.log" 2>&1 || {
+    sed -n '1,200p' "$test_root/hyprland-config.log" >&2
+    fail 'Hyprland configuration is invalid'
   }
-  pass "$(i3 --version) with i3 selected as the desktop session"
+  hyprland_version=$(XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --version 2>/dev/null | sed -n '1p')
+  [[ -n $hyprland_version ]] || fail 'Hyprland version is unavailable'
+  pass "$hyprland_version with adaptive displays and Hyprland selected"
 fi
 
 step 'Checking Bat theme'
