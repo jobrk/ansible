@@ -128,15 +128,21 @@ pass 'Tmux server with configured plugins'
 step 'Checking Zen Browser defaults'
 zen_defaults="$HOME/.config/zen/policies.json"
 [[ -f $zen_defaults ]] || fail 'Zen Browser defaults are unavailable'
+zen_autoconfig="$HOME/.config/zen/autoconfig.js"
+zen_profile="$HOME/.config/zen/jobrk.cfg"
+[[ -f $zen_autoconfig ]] || fail 'Zen Browser AutoConfig loader is unavailable'
+[[ -f $zen_profile ]] || fail 'Zen Browser profile defaults are unavailable'
+node --check "$zen_autoconfig"
+node --check < "$zen_profile"
 jq -e '
-  .policies.Preferences["zen.view.compact.enable-at-startup"].Value == true and
-  .policies.Preferences["zen.tabs.vertical.right-side"].Value == true and
-  .policies.Preferences["zen.glance.enabled"].Value == false and
-  .policies.Preferences["layout.css.prefers-color-scheme.content-override"].Value == 0 and
   .policies.ExtensionSettings["addon@darkreader.org"].installation_mode == "normal_installed" and
   .policies.ExtensionSettings["uBlock0@raymondhill.net"].installation_mode == "normal_installed" and
   .policies.ExtensionSettings["{d7742d87-e61d-4b78-b8a1-b469842139fa}"].installation_mode == "normal_installed"
 ' "$zen_defaults" >/dev/null || fail 'Zen Browser defaults do not match the Mac profile'
+grep -Fqx '    pref("zen.view.compact.enable-at-startup", true);' "$zen_profile" || fail 'Zen compact mode default is unavailable'
+grep -Fqx '    pref("zen.tabs.vertical.right-side", true);' "$zen_profile" || fail 'Zen right-side tabs default is unavailable'
+grep -Fqx '    pref("zen.glance.enabled", false);' "$zen_profile" || fail 'Zen Glance default is unavailable'
+grep -Fqx '    pref("layout.css.prefers-color-scheme.content-override", 0);' "$zen_profile" || fail 'Zen dark content default is unavailable'
 pass 'Portable preferences and Dark Reader, uBlock Origin, and Vimium policies'
 
 if command -v Hyprland >/dev/null; then
@@ -168,6 +174,8 @@ if command -v Hyprland >/dev/null; then
   grep -Fqx 'x-scheme-handler/https=zen.desktop' "$HOME/.config/mimeapps.list" || fail 'Zen Browser is not the HTTPS default'
   zen_policy="$HOME/.tarball-installations/zen/distribution/policies.json"
   [[ -L $zen_policy ]] || fail 'Zen Browser policy is not linked from dotfiles'
+  [[ -L $HOME/.tarball-installations/zen/defaults/pref/autoconfig.js ]] || fail 'Zen Browser AutoConfig loader is not linked from dotfiles'
+  [[ -L $HOME/.tarball-installations/zen/jobrk.cfg ]] || fail 'Zen Browser profile defaults are not linked from dotfiles'
   mkdir -m 700 "$test_root/runtime"
   XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --verify-config \
     --config "$HOME/.config/hypr/hyprland.conf" > "$test_root/hyprland-config.log" 2>&1 || {
@@ -183,6 +191,27 @@ if command -v Hyprland >/dev/null; then
   printf '    Waybar: %s\n' "$waybar_version"
   printf '    Zen:    %s\n' "$zen_version"
   pass "$hyprland_version with the desktop, clipboard history, and default browser configured"
+
+  mkdir "$test_root/zen-profile"
+  timeout 45 zen --headless --no-remote --profile "$test_root/zen-profile" \
+    --screenshot "$test_root/zen-first.png" 'data:text/html,smoke' > "$test_root/zen-first.log" 2>&1 || {
+    sed -n '1,120p' "$test_root/zen-first.log" >&2
+    fail 'Zen first launch failed'
+  }
+  zen_prefs="$test_root/zen-profile/prefs.js"
+  grep -Fqx 'user_pref("jobrk.zen.config-version", 1);' "$zen_prefs" || fail 'Zen profile defaults were not imported'
+  grep -Fqx 'user_pref("zen.tabs.vertical.right-side", true);' "$zen_prefs" || fail 'Zen right-side tabs were not imported'
+  grep -Fqx 'user_pref("zen.view.compact.enable-at-startup", true);' "$zen_prefs" || fail 'Zen compact mode was not imported'
+  sed -i 's/user_pref("zen.glance.enabled", false);/user_pref("zen.glance.enabled", true);/' "$zen_prefs"
+  timeout 45 zen --headless --no-remote --profile "$test_root/zen-profile" \
+    --screenshot "$test_root/zen-second.png" 'data:text/html,smoke' > "$test_root/zen-second.log" 2>&1 || {
+    sed -n '1,120p' "$test_root/zen-second.log" >&2
+    fail 'Zen second launch failed'
+  }
+  if grep -Fqx 'user_pref("zen.glance.enabled", false);' "$zen_prefs"; then
+    fail 'Zen profile defaults were reapplied after import'
+  fi
+  pass 'Zen imports the Mac profile once and preserves later user changes'
 fi
 
 step 'Checking Bat theme'

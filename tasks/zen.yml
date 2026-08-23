@@ -133,6 +133,26 @@
     state: link
     force: true
 
+- name: Create Zen Browser default preferences directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/defaults/pref"
+    state: directory
+    mode: "0755"
+
+- name: Enable portable Zen Browser preferences
+  ansible.builtin.file:
+    src: "{{ lookup('env', 'HOME') }}/.config/zen/autoconfig.js"
+    dest: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/defaults/pref/autoconfig.js"
+    state: link
+    force: true
+
+- name: Apply primary Zen Browser profile preferences
+  ansible.builtin.file:
+    src: "{{ lookup('env', 'HOME') }}/.config/zen/jobrk.cfg"
+    dest: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/jobrk.cfg"
+    state: link
+    force: true
+
 - name: Create local configuration directory
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.config"
