@@ -18,7 +18,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap
 
 Process substitution keeps standard input attached to the terminal so Ansible
 can request the sudo password when required. The piped form is suitable only
-for root, passwordless sudo, or another non-interactive environment.
+when sudo is unnecessary or already passwordless.
 
 The script installs ansible (pipx/brew, bootstrapping brew on a bare mac),
 clones or updates this repo, and runs the playbook with flags inferred from
@@ -26,6 +26,20 @@ the machine: `ui` skipped in SSH sessions (force with `UI=1`), `-K` only when
 sudo needs a password and stdin is a tty, `become` skipped when non-interactive
 without sudo. A local Linux console installs the complete Hyprland desktop. Env
 overrides: `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
+
+### Without sudo
+
+On an already-provisioned SSH machine where the user has no sudo access, run:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | bash &&
+/bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
+```
+
+The pipe keeps the run non-interactive, so bootstrap skips `become`; SSH also
+skips `ui`. User-space tools and dotfiles are updated, then the smoke test
+reports anything missing. Git and either Ansible or pipx must already be
+available. Missing system packages require an administrator.
 
 The Linux UI setup installs Hyprland with Waybar, clipboard history, portals,
 audio, notifications, graphical authentication, and Qt Wayland support. Zen is
@@ -90,9 +104,11 @@ locale, user, and imported GitHub SSH keys. The
 playbook installs every Neovim plugin, Mason tool, and Tree-sitter parser; the
 smoke test verifies them and compiles and runs each language toolchain. It also
 validates the Hyprland, Waybar, clipboard, browser, shell, and tmux setup, and
-checks Corepack/pnpm, Bat, and repository cleanliness. GitHub Actions runs these checks for Ubuntu,
-Debian, and Fedora, plus a native macOS job, on every push and pull request. Use
-`docker` instead of `podman` when Docker is running.
+checks Corepack/pnpm, Bat, and repository cleanliness. Desktop checks run only
+when Hyprland is installed; they validate binaries and configuration, not a
+live graphical session or hardware. GitHub Actions runs these checks for
+Ubuntu, Debian, and Fedora, plus a native macOS job, on every push and pull
+request. Use `docker` instead of `podman` when Docker is running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.
