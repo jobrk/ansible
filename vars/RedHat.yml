@@ -29,6 +29,7 @@ core_packages:
   - zsh
 
 ui_packages:
+  - flatpak
   - hypridle
   - hyprland
   - hyprland-guiutils

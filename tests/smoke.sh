@@ -150,7 +150,7 @@ pass 'Portable preferences and Dark Reader, uBlock Origin, and Vimium policies'
 
 if command -v Hyprland >/dev/null; then
   step 'Checking Hyprland desktop configuration'
-  for executable in alacritty cliphist Hyprland hyprctl hypridle hyprland-dialog hyprlock \
+  for executable in alacritty cliphist flatpak Hyprland hyprctl hypridle hyprland-dialog hyprlock \
     mako waybar wl-copy wl-paste wofi wpctl xdg-open zen; do
     require_command "$executable"
   done
@@ -163,6 +163,7 @@ if command -v Hyprland >/dev/null; then
   grep -qx 'Session=hyprland' "$HOME/.dmrc" || fail 'Hyprland is not the selected desktop session'
   grep -Fqx '$term = ~/.cargo/bin/alacritty' "$HOME/.config/hypr/hyprland.conf" || fail 'Alacritty is not the Hyprland terminal'
   grep -Fqx 'monitor = , preferred, auto, auto' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland does not use each display preferred mode and automatic scale'
+  grep -Fqx 'env = XDG_DATA_DIRS,/var/lib/flatpak/exports/share:/usr/local/share:/usr/share' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland cannot discover system Flatpak applications'
   grep -Fqx '    gaps_in = 6' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland inner gaps are incorrect'
   grep -Fqx '    gaps_out = 0' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland outer gaps are incorrect'
   grep -Fqx '    background_color = rgb(000000)' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland background is not black'
@@ -174,11 +175,15 @@ if command -v Hyprland >/dev/null; then
   jq empty "$HOME/.config/waybar/config.jsonc" || fail 'Waybar configuration is invalid JSON'
   grep -Fqx '    background: #000000;' "$HOME/.config/waybar/style.css" || fail 'Waybar background is not black'
   grep -Fqx 'background-color=#000000' "$HOME/.config/mako/config" || fail 'Mako background is not black'
-  grep -Fqx 'x-scheme-handler/https=zen.desktop' "$HOME/.config/mimeapps.list" || fail 'Zen Browser is not the HTTPS default'
-  zen_policy="$HOME/.tarball-installations/zen/distribution/policies.json"
-  [[ -L $zen_policy ]] || fail 'Zen Browser policy is not linked from dotfiles'
-  [[ -L $HOME/.tarball-installations/zen/defaults/pref/autoconfig.js ]] || fail 'Zen Browser AutoConfig loader is not linked from dotfiles'
-  [[ -L $HOME/.tarball-installations/zen/jobrk.cfg ]] || fail 'Zen Browser profile defaults are not linked from dotfiles'
+  grep -Fqx 'x-scheme-handler/https=app.zen_browser.zen.desktop' "$HOME/.config/mimeapps.list" || fail 'Zen Browser is not the HTTPS default'
+  flatpak info --system app.zen_browser.zen >/dev/null || fail 'Zen Browser Flatpak is unavailable'
+  [[ -f /var/lib/flatpak/exports/share/applications/app.zen_browser.zen.desktop ]] || fail 'Zen Browser desktop entry is unavailable'
+  zen_flatpak_arch=$(flatpak --default-arch)
+  zen_systemconfig="/var/lib/flatpak/extension/app.zen_browser.zen.systemconfig/$zen_flatpak_arch/stable"
+  cmp -s "$HOME/.config/zen/policies.json" "$zen_systemconfig/policies/policies.json" || fail 'Zen Browser policies are not installed'
+  cmp -s "$HOME/.config/zen/autoconfig.js" "$zen_systemconfig/defaults/pref/autoconfig.js" || fail 'Zen Browser AutoConfig loader is not installed'
+  cmp -s "$HOME/.config/zen/jobrk.cfg" "$zen_systemconfig/jobrk.cfg" || fail 'Zen Browser profile defaults are not installed'
+  [[ ! -e $HOME/.tarball-installations/zen ]] || fail 'Retired Zen Browser tarball is still installed'
   mkdir -m 700 "$test_root/runtime"
   XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --verify-config \
     --config "$HOME/.config/hypr/hyprland.conf" > "$test_root/hyprland-config.log" 2>&1 || {
@@ -189,37 +194,43 @@ if command -v Hyprland >/dev/null; then
   [[ -n $hyprland_version ]] || fail 'Hyprland version is unavailable'
   waybar_version=$(waybar --version)
   [[ -n $waybar_version ]] || fail 'Waybar version is unavailable'
-  zen_version=$(zen --version 2>&1 | sed -n '1p')
+  zen_version=$(flatpak info --system app.zen_browser.zen | sed -n 's/^[[:space:]]*Version:[[:space:]]*//p')
   [[ -n $zen_version ]] || fail 'Zen Browser version is unavailable'
   printf '    Waybar: %s\n' "$waybar_version"
   printf '    Zen:    %s\n' "$zen_version"
   pass "$hyprland_version with the desktop, clipboard history, and default browser configured"
 
-  mkdir "$test_root/zen-profile"
-  timeout 45 zen --headless --no-remote --profile "$test_root/zen-profile" \
-    --screenshot "$test_root/zen-first.png" 'data:text/html,smoke' > "$test_root/zen-first.log" 2>&1 || {
-    sed -n '1,120p' "$test_root/zen-first.log" >&2
-    fail 'Zen first launch failed'
-  }
-  zen_prefs="$test_root/zen-profile/prefs.js"
-  grep -Fqx 'user_pref("jobrk.zen.config-version", 2);' "$zen_prefs" || fail 'Zen profile defaults were not imported'
-  grep -Fqx 'user_pref("zen.tabs.vertical.right-side", true);' "$zen_prefs" || fail 'Zen right-side tabs were not imported'
-  grep -Fqx 'user_pref("zen.view.compact.enable-at-startup", true);' "$zen_prefs" || fail 'Zen compact mode was not imported'
-  grep -Fqx 'user_pref("browser.preferences.experimental.hidden", true);' "$zen_prefs" || fail 'Zen experimental-settings preference was not imported'
-  grep -Fqx 'user_pref("findbar.highlightAll", true);' "$zen_prefs" || fail 'Zen highlight-all search preference was not imported'
-  grep -Fqx 'user_pref("pdfjs.enableAltTextForEnglish", true);' "$zen_prefs" || fail 'Zen PDF alt-text preference was not imported'
-  grep -Fqx 'user_pref("privacy.clearOnShutdown_v2.formdata", true);' "$zen_prefs" || fail 'Zen form-data cleanup preference was not imported'
-  grep -Fqx 'user_pref("privacy.history.custom", true);' "$zen_prefs" || fail 'Zen custom-history preference was not imported'
-  sed -i 's/user_pref("zen.glance.enabled", false);/user_pref("zen.glance.enabled", true);/' "$zen_prefs"
-  timeout 45 zen --headless --no-remote --profile "$test_root/zen-profile" \
-    --screenshot "$test_root/zen-second.png" 'data:text/html,smoke' > "$test_root/zen-second.log" 2>&1 || {
-    sed -n '1,120p' "$test_root/zen-second.log" >&2
-    fail 'Zen second launch failed'
-  }
-  if grep -Fqx 'user_pref("zen.glance.enabled", false);' "$zen_prefs"; then
-    fail 'Zen profile defaults were reapplied after import'
+  if [[ -e /.dockerenv || -e /run/.containerenv ]]; then
+    pass 'Flatpak Zen installation and configuration; sandbox launch unavailable inside the container'
+  else
+    mkdir "$test_root/zen-profile"
+    timeout 45 flatpak run --filesystem="$test_root" app.zen_browser.zen \
+      --headless --no-remote --profile "$test_root/zen-profile" \
+      --screenshot "$test_root/zen-first.png" 'data:text/html,smoke' > "$test_root/zen-first.log" 2>&1 || {
+      sed -n '1,120p' "$test_root/zen-first.log" >&2
+      fail 'Zen first launch failed'
+    }
+    zen_prefs="$test_root/zen-profile/prefs.js"
+    grep -Fqx 'user_pref("jobrk.zen.config-version", 2);' "$zen_prefs" || fail 'Zen profile defaults were not imported'
+    grep -Fqx 'user_pref("zen.tabs.vertical.right-side", true);' "$zen_prefs" || fail 'Zen right-side tabs were not imported'
+    grep -Fqx 'user_pref("zen.view.compact.enable-at-startup", true);' "$zen_prefs" || fail 'Zen compact mode was not imported'
+    grep -Fqx 'user_pref("browser.preferences.experimental.hidden", true);' "$zen_prefs" || fail 'Zen experimental-settings preference was not imported'
+    grep -Fqx 'user_pref("findbar.highlightAll", true);' "$zen_prefs" || fail 'Zen highlight-all search preference was not imported'
+    grep -Fqx 'user_pref("pdfjs.enableAltTextForEnglish", true);' "$zen_prefs" || fail 'Zen PDF alt-text preference was not imported'
+    grep -Fqx 'user_pref("privacy.clearOnShutdown_v2.formdata", true);' "$zen_prefs" || fail 'Zen form-data cleanup preference was not imported'
+    grep -Fqx 'user_pref("privacy.history.custom", true);' "$zen_prefs" || fail 'Zen custom-history preference was not imported'
+    sed -i 's/user_pref("zen.glance.enabled", false);/user_pref("zen.glance.enabled", true);/' "$zen_prefs"
+    timeout 45 flatpak run --filesystem="$test_root" app.zen_browser.zen \
+      --headless --no-remote --profile "$test_root/zen-profile" \
+      --screenshot "$test_root/zen-second.png" 'data:text/html,smoke' > "$test_root/zen-second.log" 2>&1 || {
+      sed -n '1,120p' "$test_root/zen-second.log" >&2
+      fail 'Zen second launch failed'
+    }
+    if grep -Fqx 'user_pref("zen.glance.enabled", false);' "$zen_prefs"; then
+      fail 'Zen profile defaults were reapplied after import'
+    fi
+    pass 'Flatpak Zen imports the Mac profile once and preserves later user changes'
   fi
-  pass 'Zen imports the Mac profile once and preserves later user changes'
 fi
 
 step 'Checking Bat theme'

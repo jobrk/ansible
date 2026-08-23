@@ -43,11 +43,12 @@ available. Missing system packages require an administrator.
 
 The Linux UI setup installs Hyprland with Waybar, clipboard history, portals,
 audio, notifications, graphical authentication, and Qt Wayland support. Zen is
-installed as the default browser. It keeps an existing compatible display
-manager or adds greetd when needed, then selects Hyprland as the user's next
-desktop session. The dotfiles provide the black Catppuccin Mocha configuration.
-Zen also starts with the portable preferences and add-ons used on the primary
-Mac: compact mode, right-side tabs, Dark Reader, uBlock Origin, and Vimium.
+installed from Flathub as the default browser. It keeps an existing compatible
+display manager or adds greetd when needed, then selects Hyprland as the user's
+next desktop session. The dotfiles provide the black Catppuccin Mocha
+configuration. Zen's supported Flatpak system-configuration extension applies
+the portable preferences and add-ons used on the primary Mac: compact mode,
+right-side tabs, Dark Reader, uBlock Origin, and Vimium.
 
 Re-run any time to converge; a second run reports `changed=0`. Neovim follows
 the latest stable GitHub release and upgrades when that release changes.

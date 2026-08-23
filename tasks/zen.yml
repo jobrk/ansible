@@ -1,157 +1,117 @@
 ---
-- name: Find latest stable Zen Browser release
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/zen-browser/desktop/releases/latest
-    headers:
-      Accept: application/vnd.github+json
-      Authorization: >-
-        {{ ('Bearer ' ~ lookup('env', 'GITHUB_TOKEN'))
-           if lookup('env', 'GITHUB_TOKEN') else omit }}
-    return_content: true
-  register: zen_release
-  changed_when: false
-  check_mode: false
+- name: Add Flathub
+  become: true
+  tags: become
+  community.general.flatpak_remote:
+    name: flathub
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+    method: system
+    state: present
 
-- name: Select Zen Browser release asset
-  vars:
-    zen_arch: "{{ 'aarch64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}"
-    zen_asset_name: "zen.linux-{{ zen_arch }}.tar.xz"
-    zen_asset: "{{ zen_release.json.assets | selectattr('name', 'equalto', zen_asset_name) | first }}"
-  ansible.builtin.set_fact:
-    zen_version: "{{ zen_release.json.tag_name }}"
-    zen_download_url: "{{ zen_asset.browser_download_url }}"
-    zen_checksum: "{{ zen_asset.digest }}"
+- name: Install latest Zen Browser from Flathub
+  become: true
+  tags: become
+  community.general.flatpak:
+    name: app.zen_browser.zen
+    method: system
+    remote: flathub
+    state: latest
 
-- name: Check installed Zen Browser version
+- name: Check for the tarball Zen profile
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.zen"
+  register: zen_tarball_profile
+
+- name: Check for the Flatpak Zen profile
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.var/app/app.zen_browser.zen/.zen"
+  register: zen_flatpak_profile
+
+- name: Create the Flatpak Zen data directory
+  when:
+    - zen_tarball_profile.stat.exists
+    - not zen_flatpak_profile.stat.exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.var/app/app.zen_browser.zen"
+    state: directory
+    mode: "0700"
+
+- name: Move the tarball Zen profile to Flatpak
+  when:
+    - zen_tarball_profile.stat.exists
+    - not zen_flatpak_profile.stat.exists
   ansible.builtin.command:
     argv:
-      - cat
-      - "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/.ansible-version"
-  register: zen_check
-  changed_when: false
-  failed_when: false
-  check_mode: false
+      - mv
+      - "{{ lookup('env', 'HOME') }}/.zen"
+      - "{{ lookup('env', 'HOME') }}/.var/app/app.zen_browser.zen/.zen"
+  changed_when: true
 
-- name: Install latest stable Zen Browser release
-  when: zen_check.rc != 0 or zen_check.stdout != zen_version
+- name: Create Zen Browser Flatpak configuration directories
+  become: true
+  tags: become
   vars:
-    zen_parent_dir: "{{ lookup('env', 'HOME') }}/.tarball-installations"
-    zen_install_dir: "{{ zen_parent_dir }}/zen"
-    zen_archive: "{{ lookup('env', 'HOME') }}/.local/zen-{{ zen_version }}.tar.xz"
-  block:
-    - name: Create Zen Browser installation directory
-      ansible.builtin.file:
-        path: "{{ zen_parent_dir }}"
-        state: directory
-        mode: "0755"
-
-    - name: Download Zen Browser release
-      ansible.builtin.get_url:
-        url: "{{ zen_download_url }}"
-        dest: "{{ zen_archive }}"
-        checksum: "{{ zen_checksum }}"
-        mode: "0644"
-
-    - name: Remove previous Zen Browser tree
-      ansible.builtin.file:
-        path: "{{ zen_install_dir }}"
-        state: absent
-
-    - name: Extract Zen Browser release
-      ansible.builtin.command:
-        argv:
-          - /usr/bin/tar
-          - -xJf
-          - "{{ zen_archive }}"
-          - -C
-          - "{{ zen_parent_dir }}"
-      changed_when: true
-
-    - name: Record installed Zen Browser version
-      ansible.builtin.copy:
-        dest: "{{ zen_install_dir }}/.ansible-version"
-        content: "{{ zen_version }}\n"
-        mode: "0644"
-
-    - name: Remove Zen Browser archive
-      ansible.builtin.file:
-        path: "{{ zen_archive }}"
-        state: absent
-
-- name: Symlink Zen Browser into ~/.local/bin
+    zen_flatpak_arch: >-
+      {{ 'aarch64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}
+    zen_systemconfig: >-
+      /var/lib/flatpak/extension/app.zen_browser.zen.systemconfig/{{ zen_flatpak_arch }}/stable
   ansible.builtin.file:
-    src: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/zen"
-    dest: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
-    state: link
-    force: true
-
-- name: Create local application directory
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.local/share/applications"
+    path: "{{ zen_systemconfig }}/{{ item }}"
     state: directory
+    owner: root
+    group: root
     mode: "0755"
+  loop:
+    - policies
+    - defaults/pref
 
-- name: Register Zen Browser desktop application
+- name: Apply Zen Browser Flatpak configuration
+  become: true
+  tags: become
   vars:
-    zen_install_dir: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen"
+    zen_flatpak_arch: >-
+      {{ 'aarch64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}
+    zen_systemconfig: >-
+      /var/lib/flatpak/extension/app.zen_browser.zen.systemconfig/{{ zen_flatpak_arch }}/stable
   ansible.builtin.copy:
-    dest: "{{ lookup('env', 'HOME') }}/.local/share/applications/zen.desktop"
+    src: "{{ lookup('env', 'HOME') }}/.config/zen/{{ item.src }}"
+    dest: "{{ zen_systemconfig }}/{{ item.dest }}"
+    remote_src: true
+    owner: root
+    group: root
     mode: "0644"
+  loop:
+    - { src: policies.json, dest: policies/policies.json }
+    - { src: autoconfig.js, dest: defaults/pref/autoconfig.js }
+    - { src: jobrk.cfg, dest: jobrk.cfg }
+
+- name: Check the existing Zen Browser command
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
+    follow: false
+  register: zen_command
+
+- name: Remove the retired Zen Browser command link
+  when: zen_command.stat.islnk | default(false)
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
+    state: absent
+
+- name: Create Zen Browser command
+  ansible.builtin.copy:
+    dest: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
+    mode: "0755"
     content: |
-      [Desktop Entry]
-      Name=Zen Browser
-      Comment=Browse the web
-      Keywords=web;browser;internet
-      Exec={{ zen_install_dir }}/zen %u
-      Icon={{ zen_install_dir }}/browser/chrome/icons/default/default128.png
-      Terminal=false
-      StartupNotify=true
-      StartupWMClass=zen
-      Type=Application
-      MimeType=text/html;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
-      Categories=Network;WebBrowser;
-      Actions=new-window;new-private-window;
+      #!/bin/sh
+      exec flatpak run app.zen_browser.zen "$@"
 
-      [Desktop Action new-window]
-      Name=Open a New Window
-      Exec={{ zen_install_dir }}/zen --new-window %u
-
-      [Desktop Action new-private-window]
-      Name=Open a New Private Window
-      Exec={{ zen_install_dir }}/zen --private-window %u
-
-- name: Create Zen Browser distribution directory
+- name: Remove the retired Zen Browser tarball installation
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/distribution"
-    state: directory
-    mode: "0755"
-
-- name: Apply portable Zen Browser settings
-  ansible.builtin.file:
-    src: "{{ lookup('env', 'HOME') }}/.config/zen/policies.json"
-    dest: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/distribution/policies.json"
-    state: link
-    force: true
-
-- name: Create Zen Browser default preferences directory
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/defaults/pref"
-    state: directory
-    mode: "0755"
-
-- name: Enable portable Zen Browser preferences
-  ansible.builtin.file:
-    src: "{{ lookup('env', 'HOME') }}/.config/zen/autoconfig.js"
-    dest: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/defaults/pref/autoconfig.js"
-    state: link
-    force: true
-
-- name: Apply primary Zen Browser profile preferences
-  ansible.builtin.file:
-    src: "{{ lookup('env', 'HOME') }}/.config/zen/jobrk.cfg"
-    dest: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/jobrk.cfg"
-    state: link
-    force: true
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ lookup('env', 'HOME') }}/.tarball-installations/zen"
+    - "{{ lookup('env', 'HOME') }}/.local/share/applications/zen.desktop"
 
 - name: Create local configuration directory
   ansible.builtin.file:
@@ -164,7 +124,7 @@
     path: "{{ lookup('env', 'HOME') }}/.config/mimeapps.list"
     section: Default Applications
     option: "{{ item }}"
-    value: zen.desktop
+    value: app.zen_browser.zen.desktop
     mode: "0644"
     no_extra_spaces: true
   loop:
