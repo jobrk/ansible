@@ -26,6 +26,7 @@ core_packages:
 cask_packages:
   - alacritty
   - font-iosevka-term-nerd-font
+  - zen
 
 ui_packages: []
 display_manager_packages: []

@@ -37,13 +37,17 @@ ui_packages:
   - hyprland-qtutils
   - hyprlock
   - hyprpolkitagent
+  - cliphist
   - mako-notifier
   - network-manager
   - pipewire-audio
   - qt6-wayland
   - qtwayland5
   - wireplumber
+  - waybar
+  - wl-clipboard
   - wofi
+  - xdg-utils
   - xdg-desktop-portal-gtk
   - xdg-desktop-portal-hyprland
   - xwayland

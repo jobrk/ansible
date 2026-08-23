@@ -34,13 +34,17 @@ ui_packages:
   - hyprland-guiutils
   - hyprlock
   - hyprpolkitagent
+  - cliphist
   - mako
   - NetworkManager
   - pipewire
   - qt5-qtwayland
   - qt6-qtwayland
   - wireplumber
+  - waybar
+  - wl-clipboard
   - wofi
+  - xdg-utils
   - xdg-desktop-portal-gtk
   - xdg-desktop-portal-hyprland
   - xorg-x11-server-Xwayland

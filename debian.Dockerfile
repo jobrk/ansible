@@ -50,7 +50,8 @@ RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'command = "/usr/sbin/agreety --cmd /usr/bin/start-hyprland"' /etc/greetd/config.toml && \
     test -x /usr/sbin/agreety && \
     test -x /usr/bin/start-hyprland && \
-    dpkg-query -W hyprland-guiutils hyprland-qtutils hyprpolkitagent mako-notifier qt6-wayland qtwayland5 && \
+    dpkg-query -W cliphist hyprland-guiutils hyprland-qtutils hyprpolkitagent \
+      mako-notifier qt6-wayland qtwayland5 waybar wl-clipboard xdg-utils && \
     systemctl get-default | grep -qx graphical.target && \
     systemctl is-enabled greetd | grep -qx enabled && \
     setcap -r /usr/bin/Hyprland

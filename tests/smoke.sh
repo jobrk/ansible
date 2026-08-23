@@ -127,12 +127,16 @@ pass 'Tmux server with configured plugins'
 
 if command -v Hyprland >/dev/null; then
   step 'Checking Hyprland desktop configuration'
-  for executable in alacritty Hyprland hyprctl hypridle hyprland-dialog hyprlock mako wofi wpctl; do
+  for executable in alacritty cliphist Hyprland hyprctl hypridle hyprland-dialog hyprlock \
+    mako waybar wl-copy wl-paste wofi wpctl xdg-open zen; do
     require_command "$executable"
   done
   [[ -f /usr/lib/systemd/user/hyprpolkitagent.service ]] || fail 'Hyprland polkit agent service is unavailable'
   [[ -f /usr/lib/systemd/user/mako.service ]] || fail 'Mako notification service is unavailable'
   [[ -f "$HOME/.config/hypr/hyprland.conf" ]] || fail 'Hyprland configuration is unavailable'
+  [[ -f "$HOME/.config/waybar/config.jsonc" ]] || fail 'Waybar configuration is unavailable'
+  [[ -f "$HOME/.config/waybar/style.css" ]] || fail 'Waybar style is unavailable'
+  [[ -f "$HOME/.config/mako/config" ]] || fail 'Mako configuration is unavailable'
   grep -qx 'Session=hyprland' "$HOME/.dmrc" || fail 'Hyprland is not the selected desktop session'
   grep -Fqx '$term = ~/.cargo/bin/alacritty' "$HOME/.config/hypr/hyprland.conf" || fail 'Alacritty is not the Hyprland terminal'
   grep -Fqx 'monitor = , preferred, auto, auto' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland does not use each display preferred mode and automatic scale'
@@ -140,6 +144,14 @@ if command -v Hyprland >/dev/null; then
   grep -Fqx '    gaps_out = 0' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland outer gaps are incorrect'
   grep -Fqx '    background_color = rgb(000000)' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland background is not black'
   grep -Fqx 'exec-once = systemctl --user start hyprpolkitagent' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland polkit agent is not started'
+  grep -Fqx 'exec-once = waybar' "$HOME/.config/hypr/hyprland.conf" || fail 'Waybar is not started'
+  grep -Fqx 'exec-once = wl-paste --type text --watch cliphist store' "$HOME/.config/hypr/hyprland.conf" || fail 'Text clipboard history is not started'
+  grep -Fqx 'exec-once = wl-paste --type image --watch cliphist store' "$HOME/.config/hypr/hyprland.conf" || fail 'Image clipboard history is not started'
+  grep -Fqx 'bind = $mod, V, exec, cliphist list | wofi --dmenu --prompt Clipboard | cliphist decode | wl-copy' "$HOME/.config/hypr/hyprland.conf" || fail 'Clipboard picker shortcut is unavailable'
+  jq empty "$HOME/.config/waybar/config.jsonc" || fail 'Waybar configuration is invalid JSON'
+  grep -Fqx '    background: #000000;' "$HOME/.config/waybar/style.css" || fail 'Waybar background is not black'
+  grep -Fqx 'background-color=#000000' "$HOME/.config/mako/config" || fail 'Mako background is not black'
+  grep -Fqx 'x-scheme-handler/https=zen.desktop' "$HOME/.config/mimeapps.list" || fail 'Zen Browser is not the HTTPS default'
   mkdir -m 700 "$test_root/runtime"
   XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --verify-config \
     --config "$HOME/.config/hypr/hyprland.conf" > "$test_root/hyprland-config.log" 2>&1 || {
@@ -148,7 +160,13 @@ if command -v Hyprland >/dev/null; then
   }
   hyprland_version=$(XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --version 2>/dev/null | sed -n '1p')
   [[ -n $hyprland_version ]] || fail 'Hyprland version is unavailable'
-  pass "$hyprland_version with GUI dialogs, notifications, polkit, adaptive displays, and Hyprland selected"
+  waybar_version=$(waybar --version)
+  [[ -n $waybar_version ]] || fail 'Waybar version is unavailable'
+  zen_version=$(zen --version 2>&1 | sed -n '1p')
+  [[ -n $zen_version ]] || fail 'Zen Browser version is unavailable'
+  printf '    Waybar: %s\n' "$waybar_version"
+  printf '    Zen:    %s\n' "$zen_version"
+  pass "$hyprland_version with the desktop, clipboard history, and default browser configured"
 fi
 
 step 'Checking Bat theme'

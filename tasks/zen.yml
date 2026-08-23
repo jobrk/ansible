@@ -1,0 +1,141 @@
+---
+- name: Find latest stable Zen Browser release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/zen-browser/desktop/releases/latest
+    headers:
+      Accept: application/vnd.github+json
+      Authorization: >-
+        {{ ('Bearer ' ~ lookup('env', 'GITHUB_TOKEN'))
+           if lookup('env', 'GITHUB_TOKEN') else omit }}
+    return_content: true
+  register: zen_release
+  changed_when: false
+  check_mode: false
+
+- name: Select Zen Browser release asset
+  vars:
+    zen_arch: "{{ 'aarch64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}"
+    zen_asset_name: "zen.linux-{{ zen_arch }}.tar.xz"
+    zen_asset: "{{ zen_release.json.assets | selectattr('name', 'equalto', zen_asset_name) | first }}"
+  ansible.builtin.set_fact:
+    zen_version: "{{ zen_release.json.tag_name }}"
+    zen_download_url: "{{ zen_asset.browser_download_url }}"
+    zen_checksum: "{{ zen_asset.digest }}"
+
+- name: Check installed Zen Browser version
+  ansible.builtin.command:
+    argv:
+      - cat
+      - "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/.ansible-version"
+  register: zen_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install latest stable Zen Browser release
+  when: zen_check.rc != 0 or zen_check.stdout != zen_version
+  vars:
+    zen_parent_dir: "{{ lookup('env', 'HOME') }}/.tarball-installations"
+    zen_install_dir: "{{ zen_parent_dir }}/zen"
+    zen_archive: "{{ lookup('env', 'HOME') }}/.local/zen-{{ zen_version }}.tar.xz"
+  block:
+    - name: Create Zen Browser installation directory
+      ansible.builtin.file:
+        path: "{{ zen_parent_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download Zen Browser release
+      ansible.builtin.get_url:
+        url: "{{ zen_download_url }}"
+        dest: "{{ zen_archive }}"
+        checksum: "{{ zen_checksum }}"
+        mode: "0644"
+
+    - name: Remove previous Zen Browser tree
+      ansible.builtin.file:
+        path: "{{ zen_install_dir }}"
+        state: absent
+
+    - name: Extract Zen Browser release
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/tar
+          - -xJf
+          - "{{ zen_archive }}"
+          - -C
+          - "{{ zen_parent_dir }}"
+      changed_when: true
+
+    - name: Record installed Zen Browser version
+      ansible.builtin.copy:
+        dest: "{{ zen_install_dir }}/.ansible-version"
+        content: "{{ zen_version }}\n"
+        mode: "0644"
+
+    - name: Remove Zen Browser archive
+      ansible.builtin.file:
+        path: "{{ zen_archive }}"
+        state: absent
+
+- name: Symlink Zen Browser into ~/.local/bin
+  ansible.builtin.file:
+    src: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen/zen"
+    dest: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
+    state: link
+    force: true
+
+- name: Create local application directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/share/applications"
+    state: directory
+    mode: "0755"
+
+- name: Register Zen Browser desktop application
+  vars:
+    zen_install_dir: "{{ lookup('env', 'HOME') }}/.tarball-installations/zen"
+  ansible.builtin.copy:
+    dest: "{{ lookup('env', 'HOME') }}/.local/share/applications/zen.desktop"
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Name=Zen Browser
+      Comment=Browse the web
+      Keywords=web;browser;internet
+      Exec={{ zen_install_dir }}/zen %u
+      Icon={{ zen_install_dir }}/browser/chrome/icons/default/default128.png
+      Terminal=false
+      StartupNotify=true
+      StartupWMClass=zen
+      Type=Application
+      MimeType=text/html;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+      Categories=Network;WebBrowser;
+      Actions=new-window;new-private-window;
+
+      [Desktop Action new-window]
+      Name=Open a New Window
+      Exec={{ zen_install_dir }}/zen --new-window %u
+
+      [Desktop Action new-private-window]
+      Name=Open a New Private Window
+      Exec={{ zen_install_dir }}/zen --private-window %u
+
+- name: Create local configuration directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config"
+    state: directory
+    mode: "0755"
+
+- name: Use Zen Browser for web content
+  community.general.ini_file:
+    path: "{{ lookup('env', 'HOME') }}/.config/mimeapps.list"
+    section: Default Applications
+    option: "{{ item }}"
+    value: zen.desktop
+    mode: "0644"
+    no_extra_spaces: true
+  loop:
+    - application/xhtml+xml
+    - text/html
+    - x-scheme-handler/http
+    - x-scheme-handler/https

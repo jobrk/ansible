@@ -27,10 +27,11 @@ sudo needs a password and stdin is a tty, `become` skipped when non-interactive
 without sudo. A local Linux console installs the complete Hyprland desktop. Env
 overrides: `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
-The Linux UI setup installs Hyprland with portals, audio, notifications,
-graphical authentication, and Qt Wayland support. It keeps an existing
-compatible display manager or adds greetd when needed, then selects Hyprland
-as the user's next desktop session. The dotfiles provide its configuration.
+The Linux UI setup installs Hyprland with Waybar, clipboard history, portals,
+audio, notifications, graphical authentication, and Qt Wayland support. Zen is
+installed as the default browser. It keeps an existing compatible display
+manager or adds greetd when needed, then selects Hyprland as the user's next
+desktop session. The dotfiles provide the black Catppuccin Mocha configuration.
 
 Re-run any time to converge; a second run reports `changed=0`. Neovim follows
 the latest stable GitHub release and upgrades when that release changes.
@@ -86,8 +87,8 @@ also runs the headless cloud-init lifecycle and verifies its status,
 locale, user, and imported GitHub SSH keys. The
 playbook installs every Neovim plugin, Mason tool, and Tree-sitter parser; the
 smoke test verifies them and compiles and runs each language toolchain. It also
-validates the Hyprland config, shell/tmux setup, and checks Corepack/pnpm, Bat, and repository
-cleanliness. GitHub Actions runs these checks for Ubuntu,
+validates the Hyprland, Waybar, clipboard, browser, shell, and tmux setup, and
+checks Corepack/pnpm, Bat, and repository cleanliness. GitHub Actions runs these checks for Ubuntu,
 Debian, and Fedora, plus a native macOS job, on every push and pull request. Use
 `docker` instead of `podman` when Docker is running.
 
