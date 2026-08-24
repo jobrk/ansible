@@ -14,7 +14,9 @@
   when: fnm_check.rc != 0
 
 - name: Install fnm
-  ansible.builtin.command: ~/.fnm-installer --skip-shell
+  ansible.builtin.command: >-
+    ~/.fnm-installer --skip-shell
+    --install-dir {{ lookup('env', 'HOME') }}/.local/share/fnm
   when: fnm_check.rc != 0
   changed_when: true
 

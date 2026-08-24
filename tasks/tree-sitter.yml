@@ -41,3 +41,22 @@
       ansible.builtin.file:
         path: "{{ tree_sitter_archive }}"
         state: absent
+
+    - name: Check the release binary runs on this libc
+      ansible.builtin.command: ~/.local/bin/tree-sitter --version
+      register: tree_sitter_release_check
+      changed_when: false
+      failed_when: false
+
+    - name: Build tree-sitter CLI via cargo when the release binary cannot run
+      when: tree_sitter_release_check.rc != 0
+      ansible.builtin.command:
+        argv:
+          - ~/.cargo/bin/cargo
+          - install
+          - --locked
+          - --force
+          - --root
+          - "{{ lookup('env', 'HOME') }}/.local"
+          - tree-sitter-cli@{{ tree_sitter_version }}
+      changed_when: true
