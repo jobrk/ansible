@@ -29,15 +29,21 @@
   ansible.builtin.command: ./install.sh
   args:
     chdir: "{{ dotfiles_dest }}"
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
   register: dotfiles_stow
   changed_when: "'LINK:' in dotfiles_stow.stderr or 'UNLINK:' in dotfiles_stow.stderr"
 
 - name: Check for Catppuccin bat theme
   ansible.builtin.command: "{{ bat_executable }} --list-themes"
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
   register: bat_themes
   changed_when: false
 
 - name: Build bat theme cache
   ansible.builtin.command: "{{ bat_executable }} cache --build"
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
   when: "'Catppuccin-mocha' not in bat_themes.stdout_lines"
   changed_when: true

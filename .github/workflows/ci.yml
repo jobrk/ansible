@@ -44,6 +44,8 @@ jobs:
             dockerfile: debian.Dockerfile
           - system: Fedora
             dockerfile: fedora.Dockerfile
+          - system: Fedora without sudo
+            dockerfile: nosudo.Dockerfile
     steps:
       - uses: actions/checkout@v6
       - name: Provision twice and run smoke test

@@ -22,6 +22,11 @@
     - name: Packages
       ansible.builtin.import_tasks: tasks/packages.yml
 
+    - name: User-space fallbacks
+      ansible.builtin.import_tasks: tasks/userspace.yml
+      when: ansible_facts['system'] == 'Linux'
+      tags: userspace
+
     - name: Rust
       ansible.builtin.import_tasks: tasks/rust.yml
       tags: rust

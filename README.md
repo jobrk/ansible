@@ -27,9 +27,19 @@ sudo needs a password and stdin is a tty, `become` skipped when non-interactive
 without sudo. A local Linux console installs the complete Hyprland desktop. Env
 overrides: `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
+On Linux, a user-space pass (`--tags userspace`) runs after system packages on
+every run, sudoed or not. Each task checks for a command and installs into
+`~/.local` only when it is missing, so on a sudoed machine everything skips,
+and on any machine the run heals commands the system stops providing. The
+same check-then-fill approach covers release binaries listed under Without
+sudo, pipx via `pip install --user`, and a cargo build of the Tree-sitter CLI
+when the release binary needs a newer glibc than the host has. Fallbacks in
+`~/.local/bin` shadow later system installs because it is first on PATH;
+delete the local copy to hand a command back to the distro package.
+
 ### Without sudo
 
-On an already-provisioned SSH machine where the user has no sudo access, run:
+On a machine where the user has no sudo access, run:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | bash &&
@@ -37,9 +47,13 @@ curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | b
 ```
 
 The pipe keeps the run non-interactive, so bootstrap skips `become`; SSH also
-skips `ui`. User-space tools and dotfiles are updated, then the smoke test
-reports anything missing. Git and either Ansible or pipx must already be
-available. Missing system packages require an administrator.
+skips `ui`. Everything user-space converges: toolchains, dotfiles, and pinned
+release binaries into `~/.local/bin` for commands the system lacks (fzf,
+ripgrep, fd, bat, delta, jq, direnv, and Stow built from source when make and
+perl exist). When zsh cannot be made the login shell, interactive bash logins
+hand over to zsh instead. Git and either Ansible or pipx must already be
+available; compilers, tmux, zsh itself, and the UI stack still require an
+administrator. The smoke test reports anything missing.
 
 The Linux UI setup installs Hyprland with Waybar, clipboard history, portals,
 audio, notifications, graphical authentication, and Qt Wayland support. Zen is
@@ -62,8 +76,8 @@ ansible-galaxy collection install -r requirements.yml
 ansible-playbook -i inventory.ini main.yml -K
 ```
 
-Partial runs by tag: `--tags zsh,tmux`, `--skip-tags ui`, `--skip-tags become`
-(everything sudo-free).
+Partial runs by tag: `--tags zsh,tmux`, `--tags userspace`, `--skip-tags ui`,
+`--skip-tags become` (everything sudo-free).
 
 ## Over SSH
 

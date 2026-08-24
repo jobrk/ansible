@@ -1,0 +1,240 @@
+---
+- name: Install user-space command fallbacks
+  vars:
+    userspace_arch: >-
+      {{ 'aarch64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}
+    userspace_binaries:
+      - name: jq
+        check: jq --version
+        url:
+          x86_64: https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64
+          aarch64: https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-arm64
+        checksum:
+          x86_64: b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f
+          aarch64: 8b85c817833814ddca00a144c33705546355afccf0cf39b188f3cdb48b852309
+      - name: direnv
+        check: direnv version
+        url:
+          x86_64: https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-amd64
+          aarch64: https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-arm64
+        checksum:
+          x86_64: 1f1b93dd6f38523fde26dfac96151ef9d31a374e3005cd3345fb93555ae0c9b5
+          aarch64: 2a9cef8d73521d6a3ec3f2871c4b747b8c4cc038628c1b57a7efa42b393a2d82
+    userspace_archives:
+      - name: fzf
+        check: fzf --version
+        strip: 0
+        member:
+          x86_64: fzf
+          aarch64: fzf
+        url:
+          x86_64: https://github.com/junegunn/fzf/releases/download/v0.74.3/fzf-0.74.3-linux_amd64.tar.gz
+          aarch64: https://github.com/junegunn/fzf/releases/download/v0.74.3/fzf-0.74.3-linux_arm64.tar.gz
+        checksum:
+          x86_64: 3501a595e4b5c40a6b047340a0e8f805c46fd4e61ef95ef8a136ba8c61cf6f22
+          aarch64: 4a17a17b46bd0c4873e995533de508995c11572c0be0664a5dbcf13f60463046
+      - name: rg
+        check: rg --version
+        strip: 1
+        member:
+          x86_64: ripgrep-15.2.0-x86_64-unknown-linux-musl/rg
+          aarch64: ripgrep-15.2.0-aarch64-unknown-linux-musl/rg
+        url:
+          x86_64: https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-x86_64-unknown-linux-musl.tar.gz
+          aarch64: https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-aarch64-unknown-linux-musl.tar.gz
+        checksum:
+          x86_64: 33e15bcf1624b25cdd2a55813a47a2f95dbe126268203e76aa6a585d1e7b149c
+          aarch64: 800b1e7206afe799dfb5a6901f23147cfaabe0e52210538100f61e86e1740915
+      - name: fd
+        check: fd --version
+        strip: 1
+        member:
+          x86_64: fd-v10.4.2-x86_64-unknown-linux-musl/fd
+          aarch64: fd-v10.4.2-aarch64-unknown-linux-musl/fd
+        url:
+          x86_64: https://github.com/sharkdp/fd/releases/download/v10.4.2/fd-v10.4.2-x86_64-unknown-linux-musl.tar.gz
+          aarch64: https://github.com/sharkdp/fd/releases/download/v10.4.2/fd-v10.4.2-aarch64-unknown-linux-musl.tar.gz
+        checksum:
+          x86_64: e3257d48e29a6be965187dbd24ce9af564e0fe67b3e73c9bdcd180f4ec11bdde
+          aarch64: f32d3657473fba74e2600babc8db0b93420d51169223b7e8143b2ed55d8fd9e8
+      - name: bat
+        check: bat --version
+        strip: 1
+        member:
+          x86_64: bat-v0.26.1-x86_64-unknown-linux-musl/bat
+          aarch64: bat-v0.26.1-aarch64-unknown-linux-musl/bat
+        url:
+          x86_64: https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-x86_64-unknown-linux-musl.tar.gz
+          aarch64: https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-aarch64-unknown-linux-musl.tar.gz
+        checksum:
+          x86_64: 0dcd8ac79732c0d5b136f11f4ee00e581440e16a44eab5b3105b611bbf2cf191
+          aarch64: 6369242c584065f195fb20cb36fbd7cb63ae690605bbe89868a7596b596c2c23
+      - name: delta
+        check: delta --version
+        strip: 1
+        member:
+          x86_64: delta-0.19.2-x86_64-unknown-linux-musl/delta
+          aarch64: delta-0.19.2-aarch64-unknown-linux-gnu/delta
+        url:
+          x86_64: https://github.com/dandavison/delta/releases/download/0.19.2/delta-0.19.2-x86_64-unknown-linux-musl.tar.gz
+          aarch64: https://github.com/dandavison/delta/releases/download/0.19.2/delta-0.19.2-aarch64-unknown-linux-gnu.tar.gz
+        checksum:
+          x86_64: f1ea01ca7728ce3462debc359f39dfc7cbbc1a63224b71fefabf92042864aa1b
+          aarch64: 0bfce159a5cddd5feb3d6db4a616d883ff51253ce08ac7ec11cb1d208cfaab9e
+  block:
+    - name: Check for release binaries
+      ansible.builtin.command: "{{ item.check }}"
+      environment:
+        PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+      loop: "{{ userspace_binaries }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: userspace_binary_checks
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Install missing release binaries
+      ansible.builtin.get_url:
+        url: "{{ item.item.url[userspace_arch] }}"
+        dest: "~/.local/bin/{{ item.item.name }}"
+        checksum: "sha256:{{ item.item.checksum[userspace_arch] }}"
+        mode: "0755"
+      loop: "{{ userspace_binary_checks.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: item.rc != 0
+
+    - name: Check for release archive binaries
+      ansible.builtin.command: "{{ item.check }}"
+      environment:
+        PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+      loop: "{{ userspace_archives }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: userspace_archive_checks
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Download missing release archives
+      ansible.builtin.get_url:
+        url: "{{ item.item.url[userspace_arch] }}"
+        dest: "~/.local/bin/{{ item.item.name }}.tar.gz"
+        checksum: "sha256:{{ item.item.checksum[userspace_arch] }}"
+        mode: "0644"
+      loop: "{{ userspace_archive_checks.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: item.rc != 0
+
+    - name: Extract missing release archives
+      ansible.builtin.unarchive:
+        src: "~/.local/bin/{{ item.item.name }}.tar.gz"
+        dest: ~/.local/bin
+        remote_src: true
+        include:
+          - "{{ item.item.member[userspace_arch] }}"
+        extra_opts:
+          - "--strip-components={{ item.item.strip }}"
+      loop: "{{ userspace_archive_checks.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: item.rc != 0
+
+    - name: Remove release archives
+      ansible.builtin.file:
+        path: "~/.local/bin/{{ item.item.name }}.tar.gz"
+        state: absent
+      loop: "{{ userspace_archive_checks.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: item.rc != 0
+
+- name: Check for pipx
+  ansible.builtin.command: pipx --version
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+  register: pipx_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install pipx for the user
+  ansible.builtin.command: python3 -m pip install --user pipx
+  when: pipx_check.rc != 0
+  changed_when: true
+
+- name: Check for stow
+  ansible.builtin.command: stow --version
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+  register: stow_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Check for stow build tools
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - make --version
+    - perl --version
+  register: stow_build_tools
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install stow from source
+  when: >-
+    stow_check.rc != 0 and
+    stow_build_tools.results | rejectattr('rc', 'equalto', 0) | length == 0
+  vars:
+    stow_version: 2.4.1
+    stow_checksum: 2a671e75fc207303bfe86a9a7223169c7669df0a8108ebdf1a7fe8cd2b88780b
+    stow_build_dir: "{{ lookup('env', 'HOME') }}/.stow-build"
+  block:
+    - name: Create stow build directory
+      ansible.builtin.file:
+        path: "{{ stow_build_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download stow
+      ansible.builtin.get_url:
+        url: https://ftp.gnu.org/gnu/stow/stow-{{ stow_version }}.tar.gz
+        dest: "{{ stow_build_dir }}.tar.gz"
+        checksum: "sha256:{{ stow_checksum }}"
+        mode: "0644"
+        timeout: 60
+      register: stow_download
+      retries: 3
+      delay: 5
+      until: stow_download is succeeded
+
+    - name: Extract stow
+      ansible.builtin.unarchive:
+        src: "{{ stow_build_dir }}.tar.gz"
+        dest: "{{ stow_build_dir }}"
+        remote_src: true
+        extra_opts:
+          - --strip-components=1
+
+    - name: Configure stow
+      ansible.builtin.command:
+        cmd: ./configure --prefix={{ lookup('env', 'HOME') }}/.local
+        chdir: "{{ stow_build_dir }}"
+      changed_when: true
+
+    - name: Install stow into ~/.local
+      ansible.builtin.command:
+        cmd: make install
+        chdir: "{{ stow_build_dir }}"
+      changed_when: true
+
+    - name: Remove stow build tree
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ stow_build_dir }}"
+        - "{{ stow_build_dir }}.tar.gz"
