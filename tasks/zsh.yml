@@ -40,17 +40,6 @@
     - { repo: Aloxaf/fzf-tab, dest: plugins/fzf-tab }
     - { repo: romkatv/powerlevel10k, dest: themes/powerlevel10k }
 
-- name: Check for fzf-git checkout
-  ansible.builtin.stat:
-    path: ~/.local/share/fzf-git/.git
-  register: fzf_git_checkout
-
-- name: Remove hand-installed fzf-git
-  ansible.builtin.file:
-    path: ~/.local/share/fzf-git
-    state: absent
-  when: not fzf_git_checkout.stat.exists
-
 - name: Install fzf-git  # noqa: latest
   ansible.builtin.git:
     repo: https://github.com/junegunn/fzf-git.sh
