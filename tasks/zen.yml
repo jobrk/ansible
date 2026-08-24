@@ -17,36 +17,6 @@
     remote: flathub
     state: latest
 
-- name: Check for the tarball Zen profile
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.zen"
-  register: zen_tarball_profile
-
-- name: Check for the Flatpak Zen profile
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.var/app/app.zen_browser.zen/.zen"
-  register: zen_flatpak_profile
-
-- name: Create the Flatpak Zen data directory
-  when:
-    - zen_tarball_profile.stat.exists
-    - not zen_flatpak_profile.stat.exists
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.var/app/app.zen_browser.zen"
-    state: directory
-    mode: "0700"
-
-- name: Move the tarball Zen profile to Flatpak
-  when:
-    - zen_tarball_profile.stat.exists
-    - not zen_flatpak_profile.stat.exists
-  ansible.builtin.command:
-    argv:
-      - mv
-      - "{{ lookup('env', 'HOME') }}/.zen"
-      - "{{ lookup('env', 'HOME') }}/.var/app/app.zen_browser.zen/.zen"
-  changed_when: true
-
 - name: Create Zen Browser Flatpak configuration directories
   become: true
   tags: become
@@ -85,18 +55,6 @@
     - { src: autoconfig.js, dest: defaults/pref/autoconfig.js }
     - { src: jobrk.cfg, dest: jobrk.cfg }
 
-- name: Check the existing Zen Browser command
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
-    follow: false
-  register: zen_command
-
-- name: Remove the retired Zen Browser command link
-  when: zen_command.stat.islnk | default(false)
-  ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
-    state: absent
-
 - name: Create Zen Browser command
   ansible.builtin.copy:
     dest: "{{ lookup('env', 'HOME') }}/.local/bin/zen"
@@ -104,14 +62,6 @@
     content: |
       #!/bin/sh
       exec flatpak run app.zen_browser.zen "$@"
-
-- name: Remove the retired Zen Browser tarball installation
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - "{{ lookup('env', 'HOME') }}/.tarball-installations/zen"
-    - "{{ lookup('env', 'HOME') }}/.local/share/applications/zen.desktop"
 
 - name: Create local configuration directory
   ansible.builtin.file:

@@ -189,7 +189,6 @@ if command -v Hyprland >/dev/null; then
   cmp -s "$HOME/.config/zen/policies.json" "$zen_systemconfig/policies/policies.json" || fail 'Zen Browser policies are not installed'
   cmp -s "$HOME/.config/zen/autoconfig.js" "$zen_systemconfig/defaults/pref/autoconfig.js" || fail 'Zen Browser AutoConfig loader is not installed'
   cmp -s "$HOME/.config/zen/jobrk.cfg" "$zen_systemconfig/jobrk.cfg" || fail 'Zen Browser profile defaults are not installed'
-  [[ ! -e $HOME/.tarball-installations/zen ]] || fail 'Retired Zen Browser tarball is still installed'
   mkdir -m 700 "$test_root/runtime"
   XDG_RUNTIME_DIR="$test_root/runtime" Hyprland --verify-config \
     --config "$HOME/.config/hypr/hyprland.conf" > "$test_root/hyprland-config.log" 2>&1 || {
