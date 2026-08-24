@@ -125,10 +125,15 @@ machine-local files as needed.
 podman build --no-cache -f ubuntu.Dockerfile .
 podman build --no-cache -f debian.Dockerfile .
 podman build --no-cache -f fedora.Dockerfile .
+podman build --no-cache -f nosudo.Dockerfile .
 ```
 
 Each image runs the playbook twice, requires `changed=0` on the second run, and
-runs `tests/smoke.sh`. All three exercise local-console UI provisioning; Debian
+runs `tests/smoke.sh`. The nosudo image instead provisions as a user with no
+sudo on a Fedora base an administrator prepared, and asserts the user-space
+fallbacks: every command resolves, Stow and fzf came from `~/.local/bin`,
+dotfiles are stowed, and bash logins hand over to zsh. The other three
+exercise local-console UI provisioning; Debian
 also runs the headless cloud-init lifecycle and verifies its status,
 locale, user, and imported GitHub SSH keys. The
 playbook installs every Neovim plugin, Mason tool, and Tree-sitter parser; the
@@ -137,8 +142,9 @@ validates the Hyprland, Waybar, clipboard, browser, shell, and tmux setup, and
 checks Corepack/pnpm, Bat, and repository cleanliness. Desktop checks run only
 when Hyprland is installed; they validate binaries and configuration, not a
 live graphical session or hardware. GitHub Actions runs these checks for
-Ubuntu, Debian, and Fedora, plus a native macOS job, on every push and pull
-request. Use `docker` instead of `podman` when Docker is running.
+Ubuntu, Debian, Fedora, and Fedora without sudo, plus a native macOS job, on
+every push and pull request. Use `docker` instead of `podman` when Docker is
+running.
 
 macOS can't be containerized: `ansible-playbook -i inventory.ini main.yml --check` first,
 then a real run.
