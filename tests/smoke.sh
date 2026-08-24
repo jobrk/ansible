@@ -119,6 +119,12 @@ step 'Checking shell and terminal configuration'
 pass 'Shell uses en_US.UTF-8 without an LC_ALL override'
 zsh -n "$HOME/.zshrc"
 pass 'Zsh configuration syntax'
+[[ -r $HOME/.fzf.zsh ]] || fail 'fzf shell integration is unavailable'
+pass 'fzf shell integration'
+fzf_git="$HOME/.local/share/fzf-git/fzf-git.sh"
+[[ -r $fzf_git ]] || fail 'fzf-git.sh is unavailable (~/.zshrc sources it silently)'
+zsh -n "$fzf_git"
+pass 'fzf-git key bindings'
 bash -n "$HOME/.local/bin/tmux-sessionizer"
 pass 'Sessionizer syntax'
 tmux -L "$tmux_socket" -f "$HOME/.tmux.conf" new-session -d -s smoke -c "$test_root"
