@@ -30,12 +30,27 @@ overrides: `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 On Linux, a user-space pass (`--tags userspace`) runs after system packages on
 every run, sudoed or not. Each task checks for a command and installs into
 `~/.local` only when it is missing, so on a sudoed machine everything skips,
-and on any machine the run heals commands the system stops providing. The
-same check-then-fill approach covers release binaries listed under Without
-sudo, pipx via `pip install --user`, and a cargo build of the Tree-sitter CLI
-when the release binary needs a newer glibc than the host has. Fallbacks in
-`~/.local/bin` shadow later system installs because it is first on PATH;
-delete the local copy to hand a command back to the distro package.
+and on any machine the run heals commands the system stops providing.
+Fallbacks in `~/.local/bin` shadow later system installs because it is first
+on PATH; delete the local copy to hand a command back to the distro package.
+
+### What needs sudo
+
+On macOS everything installs through Homebrew as the user, so the sudo column
+only applies to Linux. Every fallback lands under `~/.local`.
+
+| Component | With sudo (Linux) | Without sudo |
+|---|---|---|
+| Compilers, make, cmake, git, python3, tmux, zsh, unzip, locales | dnf/apt | none — administrator |
+| Go, Java 25, .NET 10 SDKs | dnf/apt | none — administrator |
+| fzf, ripgrep, fd, bat, delta, jq, direnv | dnf/apt | pinned release binaries |
+| Stow | dnf/apt | built from source (needs make and perl) |
+| pipx | dnf/apt | `pip install --user` |
+| Tree-sitter CLI | release binary | same; cargo-built when the host glibc is too old |
+| zsh as the login shell | chsh | `~/.bash_profile` hands interactive logins to zsh |
+| Hyprland desktop, greetd, Waybar, portals (`ui`) | dnf/apt | none — administrator |
+| Zen Browser (`ui`) | system Flatpak | none — administrator |
+| Rust, Node LTS (fnm), Neovim, oh-my-zsh + plugins, fzf-git, alacritty (cargo), fonts, tpm, Mason tools, parsers, dotfiles | user-space | same — sudo never needed |
 
 ### Without sudo
 
@@ -47,13 +62,10 @@ curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | b
 ```
 
 The pipe keeps the run non-interactive, so bootstrap skips `become`; SSH also
-skips `ui`. Everything user-space converges: toolchains, dotfiles, and pinned
-release binaries into `~/.local/bin` for commands the system lacks (fzf,
-ripgrep, fd, bat, delta, jq, direnv, and Stow built from source when make and
-perl exist). When zsh cannot be made the login shell, interactive bash logins
-hand over to zsh instead. Git and either Ansible or pipx must already be
-available; compilers, tmux, zsh itself, and the UI stack still require an
-administrator. The smoke test reports anything missing.
+skips `ui`. Everything in the table with a fallback converges; the
+administrator rows must already be provisioned — at minimum git and either
+Ansible or pipx, plus make and perl for the Stow build. The smoke test
+reports anything missing.
 
 The Linux UI setup installs Hyprland with Waybar, clipboard history, portals,
 audio, notifications, graphical authentication, and Qt Wayland support. Zen is
