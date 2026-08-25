@@ -205,7 +205,7 @@ if command -v Hyprland >/dev/null; then
   printf '    Zen:    %s\n' "$zen_version"
   pass "$hyprland_version with the desktop, clipboard history, and default browser configured"
 
-  if [[ -e /.dockerenv || -e /run/.containerenv ]]; then
+  if [[ ${SMOKE_CONTAINER:-0} == 1 ]]; then
     pass 'Flatpak Zen installation and configuration; sandbox launch unavailable inside the container'
   else
     mkdir "$test_root/zen-profile"

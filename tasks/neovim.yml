@@ -1,12 +1,15 @@
 ---
 - name: Find latest stable Neovim release
+  vars:
+    github_token: >-
+      {{ lookup('env', 'GITHUB_TOKEN') or
+         lookup('file', '/run/secrets/GITHUB_TOKEN', errors='ignore') or '' }}
   ansible.builtin.uri:
     url: https://api.github.com/repos/neovim/neovim/releases/latest
     headers:
       Accept: application/vnd.github+json
       Authorization: >-
-        {{ ('Bearer ' ~ lookup('env', 'GITHUB_TOKEN'))
-           if lookup('env', 'GITHUB_TOKEN') else omit }}
+        {{ ('Bearer ' ~ github_token) if github_token else omit }}
     return_content: true
   register: nvim_release
   changed_when: false

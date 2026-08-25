@@ -41,8 +41,9 @@ FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
 RUN git -C ./ansible remote set-url origin https://github.com/jobrk/ansible
-RUN ./ansible/bootstrap.sh
-RUN ./ansible/bootstrap.sh | tee /tmp/second-run.log && \
+RUN --mount=type=secret,id=GITHUB_TOKEN ./ansible/bootstrap.sh
+RUN --mount=type=secret,id=GITHUB_TOKEN \
+    ./ansible/bootstrap.sh | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 USER root
 RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
@@ -56,6 +57,6 @@ RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     systemctl is-enabled greetd | grep -qx enabled && \
     setcap -r /usr/bin/Hyprland
 USER jobrk
-RUN /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
+RUN SMOKE_CONTAINER=1 /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
 ENV TERM=xterm-256color
 CMD ["/bin/zsh"]
