@@ -43,6 +43,10 @@
       ansible.builtin.import_tasks: tasks/zsh.yml
       tags: zsh
 
+    - name: Bash-to-zsh login handoff
+      ansible.builtin.import_tasks: tasks/handoff.yml
+      tags: [never, handoff]
+
     - name: Neovim
       ansible.builtin.import_tasks: tasks/neovim.yml
       tags: neovim

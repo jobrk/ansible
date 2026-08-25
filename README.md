@@ -26,7 +26,9 @@ ansible-playbook -i inventory.ini main.yml -K
 ```
 
 Partial runs: `--tags zsh,tmux`, `--tags userspace`, `--skip-tags ui`,
-`--skip-tags become`. Re-run any time; a second run reports `changed=0`.
+`--skip-tags become`. The bash-to-zsh login handoff never runs by default:
+add it with `--tags handoff` (alone, or `--tags all,handoff` alongside a full
+run). Re-run any time; a second run reports `changed=0`.
 
 ## What needs sudo
 
@@ -45,7 +47,7 @@ install; delete the local copy to hand the command back to the distro.
 | Stow | dnf/apt | built from source (needs make and perl) |
 | pipx | dnf/apt | `pip install --user` |
 | Tree-sitter CLI | release binary | same; cargo-built when the host glibc is too old |
-| zsh as the login shell | chsh | `~/.bash_profile` hands interactive logins to zsh |
+| zsh as the login shell | chsh | opt-in `--tags handoff`: `~/.bash_profile` hands interactive logins to zsh |
 | Rust, Node LTS, Neovim, oh-my-zsh + plugins, fzf-git, alacritty, fonts, tpm, Mason tools, parsers, dotfiles | user-space | same — sudo never needed |
 
 Without sudo, run bootstrap non-interactively and let the smoke test report

@@ -6,14 +6,6 @@
     name: "{{ ansible_facts['user_id'] }}"
     shell: /bin/zsh
 
-- name: Hand interactive bash logins to zsh
-  when: ansible_facts['user_shell'] | basename != 'zsh'
-  ansible.builtin.lineinfile:
-    path: ~/.bash_profile
-    line: 'case $- in *i*) command -v zsh > /dev/null && exec zsh -l ;; esac'
-    create: true
-    mode: "0644"
-
 - name: Check for oh-my-zsh
   ansible.builtin.stat:
     path: ~/.oh-my-zsh

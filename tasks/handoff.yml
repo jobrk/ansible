@@ -1,0 +1,8 @@
+---
+- name: Hand interactive bash logins to zsh
+  when: ansible_facts['user_shell'] | basename != 'zsh'
+  ansible.builtin.lineinfile:
+    path: ~/.bash_profile
+    line: 'case $- in *i*) command -v zsh > /dev/null && exec zsh -l ;; esac'
+    create: true
+    mode: "0644"

@@ -18,8 +18,8 @@ WORKDIR /home/jobrk
 FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
-RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --skip-tags become,ui
-RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --skip-tags become,ui | tee /tmp/second-run.log && \
+RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --tags all,handoff --skip-tags become,ui
+RUN ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --tags all,handoff --skip-tags become,ui | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 RUN export PATH="$HOME/.local/bin:$PATH" && \
     for command in bat delta direnv fd fzf jq pipx rg stow; do \
