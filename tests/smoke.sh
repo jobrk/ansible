@@ -160,6 +160,11 @@ if command -v Hyprland >/dev/null; then
     mako waybar wl-copy wl-paste wofi wpctl xdg-open zen; do
     require_command "$executable"
   done
+  if grep -Eq '^ID=(fedora|ubuntu)$' /etc/os-release; then
+    require_command ghostty
+    ghostty --version | grep -q '^Ghostty ' || fail 'Ghostty version is invalid'
+  fi
+  [[ -f "$HOME/.config/ghostty/config.ghostty" ]] || fail 'Ghostty configuration is unavailable'
   [[ -f /usr/lib/systemd/user/hyprpolkitagent.service ]] || fail 'Hyprland polkit agent service is unavailable'
   [[ -f /usr/lib/systemd/user/mako.service ]] || fail 'Mako notification service is unavailable'
   [[ -f "$HOME/.config/hypr/hyprland.conf" ]] || fail 'Hyprland configuration is unavailable'

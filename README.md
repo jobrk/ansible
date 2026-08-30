@@ -42,7 +42,7 @@ install; delete the local copy to hand the command back to the distro.
 |---|---|---|
 | Compilers, make, cmake, git, python3, tmux, zsh, unzip, locales | dnf/apt | none — administrator |
 | Go, Java 25, .NET 10 SDKs | dnf/apt | none — administrator |
-| Hyprland desktop, greetd, Waybar, portals, Zen Browser (`ui`) | dnf/apt + Flatpak | none — administrator |
+| Hyprland desktop, greetd, Waybar, portals, Zen Browser, Ghostty on Fedora/Ubuntu 26.04+ (`ui`) | dnf/apt + Flatpak | none — administrator |
 | fzf, ripgrep, fd, bat, delta, jq, direnv | dnf/apt | pinned release binaries |
 | Stow | dnf/apt | built from source (needs make and perl) |
 | pipx | dnf/apt | `pip install --user` |

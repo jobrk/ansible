@@ -1,0 +1,37 @@
+---
+- name: Check for the Ghostty COPR (Fedora)
+  when: ansible_facts['distribution'] == 'Fedora'
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
+  register: ghostty_copr
+
+- name: Enable the Ghostty COPR (Fedora)
+  become: true
+  tags: become
+  when:
+    - ansible_facts['distribution'] == 'Fedora'
+    - not ghostty_copr.stat.exists
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - scottames/ghostty
+  changed_when: true
+
+- name: Install Ghostty (Fedora)
+  become: true
+  tags: become
+  when: ansible_facts['distribution'] == 'Fedora'
+  ansible.builtin.dnf:
+    name: ghostty
+
+- name: Install Ghostty (Ubuntu)
+  become: true
+  tags: become
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_version'] is version('26.04', '>=')
+  ansible.builtin.apt:
+    name: ghostty

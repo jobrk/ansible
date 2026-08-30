@@ -27,7 +27,7 @@ RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'command = "/usr/sbin/agreety --cmd /usr/bin/start-hyprland"' /etc/greetd/config.toml && \
     test -x /usr/sbin/agreety && \
     test -x /usr/bin/start-hyprland && \
-    dpkg-query -W cliphist flatpak hyprland-qtutils hyprpolkitagent mako-notifier qt6-wayland \
+    dpkg-query -W cliphist flatpak ghostty hyprland-qtutils hyprpolkitagent mako-notifier qt6-wayland \
       qtwayland5 waybar wl-clipboard xdg-utils && \
     systemctl get-default | grep -qx graphical.target && \
     systemctl is-enabled greetd | grep -qx enabled

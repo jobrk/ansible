@@ -55,6 +55,11 @@
       ansible.builtin.import_tasks: tasks/fonts.yml
       tags: ui
 
+    - name: Ghostty
+      ansible.builtin.import_tasks: tasks/ghostty.yml
+      when: ansible_facts['system'] == 'Linux'
+      tags: ui
+
     - name: Alacritty
       ansible.builtin.import_tasks: tasks/alacritty.yml
       tags: ui
