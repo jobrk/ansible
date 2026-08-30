@@ -80,9 +80,17 @@
         chdir: "{{ ghostty_dir }}"
         creates: "{{ ghostty_dir }}/squashfs-root/AppRun"
 
+    - name: Create the Ghostty launcher
+      ansible.builtin.copy:
+        dest: "{{ ghostty_dir }}/ghostty"
+        mode: "0755"
+        content: |
+          #!/bin/sh
+          exec "{{ ghostty_dir }}/squashfs-root/AppRun" "$@"
+
     - name: Create the Ghostty command
       ansible.builtin.file:
-        src: "{{ ghostty_dir }}/squashfs-root/AppRun"
+        src: "{{ ghostty_dir }}/ghostty"
         dest: "{{ lookup('env', 'HOME') }}/.local/bin/ghostty"
         state: link
 
