@@ -41,8 +41,8 @@ FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
 RUN git -C ./ansible remote set-url origin https://github.com/jobrk/ansible
-RUN --mount=type=secret,id=GITHUB_TOKEN ./ansible/bootstrap.sh
-RUN --mount=type=secret,id=GITHUB_TOKEN \
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 ./ansible/bootstrap.sh
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./ansible/bootstrap.sh | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 USER root

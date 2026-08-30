@@ -18,9 +18,9 @@ WORKDIR /home/jobrk
 FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
-RUN --mount=type=secret,id=GITHUB_TOKEN \
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --tags all,handoff --skip-tags become,ui
-RUN --mount=type=secret,id=GITHUB_TOKEN \
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --tags all,handoff --skip-tags become,ui | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 RUN export PATH="$HOME/.local/bin:$PATH" && \
