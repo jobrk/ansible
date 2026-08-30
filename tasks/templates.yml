@@ -20,3 +20,20 @@
     - { src: tmux.local.conf.example, dest: ~/.tmux.local.conf }
     - { src: alacritty.local.toml.example, dest: ~/.config/alacritty/local.toml }
     - { src: sessionizer.paths.example, dest: ~/.config/sessionizer/paths }
+
+- name: Create Ghostty local config directory (macOS)
+  when: ansible_facts['system'] == 'Darwin'
+  tags: ui
+  ansible.builtin.file:
+    path: ~/.config/ghostty
+    state: directory
+    mode: "0755"
+
+- name: Seed Ghostty local config (macOS)
+  when: ansible_facts['system'] == 'Darwin'
+  tags: ui
+  ansible.builtin.copy:
+    src: "{{ dotfiles_dest }}/templates/ghostty.local.ghostty.example"
+    dest: ~/.config/ghostty/local.ghostty
+    force: false
+    mode: "0644"

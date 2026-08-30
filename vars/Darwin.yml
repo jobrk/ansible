@@ -25,6 +25,7 @@ core_packages:
 
 cask_packages:
   - alacritty
+  - ghostty
   - font-iosevka-term-nerd-font
   - zen
 
