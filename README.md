@@ -14,7 +14,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap
 Bootstrap installs ansible, clones or updates this repo, and infers flags:
 `ui` skipped over SSH (force with `UI=1`), `-K` only when sudo needs a
 password, `become` skipped when sudo is unavailable or non-interactive. Env overrides:
-`SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`, `GHOSTTY_APPIMAGE`.
+`SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
 Manual equivalent:
 
@@ -43,7 +43,7 @@ install; delete the local copy to hand the command back to the distro.
 | Compilers, make, cmake, git, python3, tmux, zsh, unzip, locales | dnf/apt | none — administrator |
 | Go, Java 25, .NET 10 SDKs | dnf/apt | none — administrator |
 | Hyprland desktop, greetd, Waybar, portals, Zen Browser (`ui`) | dnf/apt + Flatpak | none — administrator |
-| Ghostty (`ui`) | dnf/apt | opt-in pinned AppImage (`GHOSTTY_APPIMAGE=1`) |
+| Ghostty (`ui`) | dnf/apt | pinned AppImage |
 | fzf, ripgrep, fd, bat, delta, jq, direnv | dnf/apt | pinned release binaries |
 | Stow | dnf/apt | built from source (needs make and perl) |
 | pipx | dnf/apt | `pip install --user` |
@@ -59,16 +59,12 @@ curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | b
 /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
 ```
 
-On a graphical Linux machine without sudo, opt into the community Ghostty
-AppImage. It is verified against a pinned checksum and extracted under
-`~/.local/opt`, so it does not depend on FUSE:
+On a graphical Linux machine without sudo, Ghostty falls back to a community
+AppImage when it is not already installed. It is verified against a pinned
+checksum and extracted under `~/.local/opt`, so it does not depend on FUSE.
 
-```sh
-GHOSTTY_APPIMAGE=1 bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh)
-```
-
-Ghostty remains local when provisioning a server over SSH; `ui` is skipped
-unless explicitly forced with `UI=1`.
+Ghostty remains untouched when provisioning a server over SSH because `ui` is
+skipped. Set `UI=1` when provisioning a graphical workstation over SSH.
 
 ## Over SSH
 

@@ -1,6 +1,17 @@
 ---
+- name: Check for Ghostty
+  ansible.builtin.command: ghostty --version
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+  register: ghostty_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
 - name: Check for the Ghostty COPR (Fedora)
-  when: ansible_facts['distribution'] == 'Fedora'
+  when:
+    - ghostty_check.rc != 0
+    - ansible_facts['distribution'] == 'Fedora'
   ansible.builtin.stat:
     path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
   register: ghostty_copr
@@ -9,8 +20,9 @@
   become: true
   tags: become
   when:
+    - ghostty_check.rc != 0
     - ansible_facts['distribution'] == 'Fedora'
-    - not ghostty_copr.stat.exists
+    - not (ghostty_copr.stat.exists | default(false))
   ansible.builtin.command:
     argv:
       - dnf
@@ -23,7 +35,9 @@
 - name: Install Ghostty (Fedora)
   become: true
   tags: become
-  when: ansible_facts['distribution'] == 'Fedora'
+  when:
+    - ghostty_check.rc != 0
+    - ansible_facts['distribution'] == 'Fedora'
   ansible.builtin.dnf:
     name: ghostty
 
@@ -31,14 +45,23 @@
   become: true
   tags: become
   when:
+    - ghostty_check.rc != 0
     - ansible_facts['distribution'] == 'Ubuntu'
     - ansible_facts['distribution_version'] is version('26.04', '>=')
   ansible.builtin.apt:
     name: ghostty
 
+- name: Check for Ghostty after system packages
+  ansible.builtin.command: ghostty --version
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+  register: ghostty_package_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
 - name: Install Ghostty AppImage for the user
-  tags: ghostty-appimage
-  when: ghostty_appimage | bool
+  when: ghostty_package_check.rc != 0
   vars:
     ghostty_version: 1.3.1
     ghostty_arch: >-

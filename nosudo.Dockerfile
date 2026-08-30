@@ -25,10 +25,10 @@ RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml \
-      --tags ghostty-appimage --skip-tags become -e ghostty_appimage=true
+      --tags ghostty --skip-tags become
 RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml \
-      --tags ghostty-appimage --skip-tags become -e ghostty_appimage=true | tee /tmp/ghostty-second-run.log && \
+      --tags ghostty --skip-tags become | tee /tmp/ghostty-second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/ghostty-second-run.log
 RUN export PATH="$HOME/.local/bin:$PATH" && \
     for command in bat delta direnv fd fzf jq pipx rg stow; do \
