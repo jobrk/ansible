@@ -156,14 +156,11 @@ pass 'Portable preferences and Dark Reader, uBlock Origin, and Vimium policies'
 
 if command -v Hyprland >/dev/null; then
   step 'Checking Hyprland desktop configuration'
-  for executable in alacritty cliphist flatpak Hyprland hyprctl hypridle hyprland-dialog hyprlock \
+  for executable in cliphist flatpak ghostty Hyprland hyprctl hypridle hyprland-dialog hyprlock \
     mako waybar wl-copy wl-paste wofi wpctl xdg-open zen; do
     require_command "$executable"
   done
-  if grep -Eq '^ID=(fedora|ubuntu)$' /etc/os-release; then
-    require_command ghostty
-    ghostty --version | grep -q '^Ghostty ' || fail 'Ghostty version is invalid'
-  fi
+  ghostty --version | grep -q '^Ghostty ' || fail 'Ghostty version is invalid'
   [[ -f "$HOME/.config/ghostty/config.ghostty" ]] || fail 'Ghostty configuration is unavailable'
   [[ -f /usr/lib/systemd/user/hyprpolkitagent.service ]] || fail 'Hyprland polkit agent service is unavailable'
   [[ -f /usr/lib/systemd/user/mako.service ]] || fail 'Mako notification service is unavailable'
@@ -172,7 +169,7 @@ if command -v Hyprland >/dev/null; then
   [[ -f "$HOME/.config/waybar/style.css" ]] || fail 'Waybar style is unavailable'
   [[ -f "$HOME/.config/mako/config" ]] || fail 'Mako configuration is unavailable'
   grep -qx 'Session=hyprland' "$HOME/.dmrc" || fail 'Hyprland is not the selected desktop session'
-  grep -Fqx '$term = ~/.cargo/bin/alacritty' "$HOME/.config/hypr/hyprland.conf" || fail 'Alacritty is not the Hyprland terminal'
+  grep -Fqx '$term = ghostty' "$HOME/.config/hypr/hyprland.conf" || fail 'Ghostty is not the Hyprland terminal'
   grep -Fqx 'monitor = , preferred, auto, auto' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland does not use each display preferred mode and automatic scale'
   grep -Fqx 'env = XDG_DATA_DIRS,/var/lib/flatpak/exports/share:/usr/local/share:/usr/share' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland cannot discover system Flatpak applications'
   grep -Fqx '    gaps_in = 6' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland inner gaps are incorrect'

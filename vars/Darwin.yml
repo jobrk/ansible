@@ -24,7 +24,6 @@ core_packages:
   - zsh
 
 cask_packages:
-  - alacritty
   - ghostty
   - font-iosevka-term-nerd-font
   - zen

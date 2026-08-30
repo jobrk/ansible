@@ -49,7 +49,7 @@ install; delete the local copy to hand the command back to the distro.
 | pipx | dnf/apt | `pip install --user` |
 | Tree-sitter CLI | release binary | same; cargo-built when the host glibc is too old |
 | zsh as the login shell | chsh | opt-in `--tags handoff`: `~/.bash_profile` hands interactive logins to zsh |
-| Rust, Node LTS, Neovim, oh-my-zsh + plugins, fzf-git, alacritty, fonts, tpm, Mason tools, parsers, dotfiles | user-space | same — sudo never needed |
+| Rust, Node LTS, Neovim, oh-my-zsh + plugins, fzf-git, fonts, tpm, Mason tools, parsers, dotfiles | user-space | same — sudo never needed |
 
 Without sudo, run bootstrap non-interactively and let the smoke test report
 anything missing:

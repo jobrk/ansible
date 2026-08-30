@@ -60,10 +60,6 @@
       when: ansible_facts['system'] == 'Linux'
       tags: [ui, ghostty]
 
-    - name: Alacritty
-      ansible.builtin.import_tasks: tasks/alacritty.yml
-      tags: ui
-
     - name: MacOS extras
       ansible.builtin.import_tasks: tasks/macos.yml
       when: ansible_facts['system'] == 'Darwin'

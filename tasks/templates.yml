@@ -5,7 +5,6 @@
     state: directory
     mode: "0755"
   loop:
-    - ~/.config/alacritty
     - ~/.config/sessionizer
 
 - name: Seed machine-local files from dotfiles templates
@@ -18,7 +17,6 @@
     - { src: zshrc.local.example, dest: ~/.zshrc.local }
     - { src: gitconfig.local.example, dest: ~/.gitconfig.local }
     - { src: tmux.local.conf.example, dest: ~/.tmux.local.conf }
-    - { src: alacritty.local.toml.example, dest: ~/.config/alacritty/local.toml }
     - { src: sessionizer.paths.example, dest: ~/.config/sessionizer/paths }
 
 - name: Create Ghostty local config directory (macOS)
