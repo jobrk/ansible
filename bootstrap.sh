@@ -68,7 +68,9 @@ fi
 
 log "Fetching playbook"
 if [[ -d $DEST/.git ]]; then
-  git -C "$DEST" pull --ff-only
+  if git -C "$DEST" symbolic-ref --quiet HEAD > /dev/null; then
+    git -C "$DEST" pull --ff-only
+  fi
 else
   git clone "$REPO" "$DEST"
 fi
