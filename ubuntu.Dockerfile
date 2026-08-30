@@ -16,9 +16,9 @@ FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
 RUN git -C ./ansible remote set-url origin https://github.com/jobrk/ansible
-RUN --mount=type=secret,id=GITHUB_TOKEN \
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     (sleep 5; printf 'testpass\n') | script -qec './ansible/bootstrap.sh' /dev/null
-RUN --mount=type=secret,id=GITHUB_TOKEN \
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     (sleep 5; printf 'testpass\n') | script -qec './ansible/bootstrap.sh' /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 USER root
@@ -27,7 +27,7 @@ RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'command = "/usr/sbin/agreety --cmd /usr/bin/start-hyprland"' /etc/greetd/config.toml && \
     test -x /usr/sbin/agreety && \
     test -x /usr/bin/start-hyprland && \
-    dpkg-query -W cliphist flatpak hyprland-qtutils hyprpolkitagent mako-notifier qt6-wayland \
+    dpkg-query -W cliphist flatpak ghostty hyprland-qtutils hyprpolkitagent mako-notifier qt6-wayland \
       qtwayland5 waybar wl-clipboard xdg-utils && \
     systemctl get-default | grep -qx graphical.target && \
     systemctl is-enabled greetd | grep -qx enabled

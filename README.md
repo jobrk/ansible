@@ -13,7 +13,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap
 
 Bootstrap installs ansible, clones or updates this repo, and infers flags:
 `ui` skipped over SSH (force with `UI=1`), `-K` only when sudo needs a
-password, `become` skipped when non-interactive without sudo. Env overrides:
+password, `become` skipped when sudo is unavailable or non-interactive. Env overrides:
 `SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
 
 Manual equivalent:
@@ -43,12 +43,13 @@ install; delete the local copy to hand the command back to the distro.
 | Compilers, make, cmake, git, python3, tmux, zsh, unzip, locales | dnf/apt | none — administrator |
 | Go, Java 25, .NET 10 SDKs | dnf/apt | none — administrator |
 | Hyprland desktop, greetd, Waybar, portals, Zen Browser (`ui`) | dnf/apt + Flatpak | none — administrator |
+| Ghostty (`ui`) | dnf/apt | pinned AppImage |
 | fzf, ripgrep, fd, bat, delta, jq, direnv | dnf/apt | pinned release binaries |
 | Stow | dnf/apt | built from source (needs make and perl) |
 | pipx | dnf/apt | `pip install --user` |
 | Tree-sitter CLI | release binary | same; cargo-built when the host glibc is too old |
 | zsh as the login shell | chsh | opt-in `--tags handoff`: `~/.bash_profile` hands interactive logins to zsh |
-| Rust, Node LTS, Neovim, oh-my-zsh + plugins, fzf-git, alacritty, fonts, tpm, Mason tools, parsers, dotfiles | user-space | same — sudo never needed |
+| Rust, Node LTS, Neovim, oh-my-zsh + plugins, fzf-git, fonts, tpm, Mason tools, parsers, dotfiles | user-space | same — sudo never needed |
 
 Without sudo, run bootstrap non-interactively and let the smoke test report
 anything missing:
@@ -57,6 +58,13 @@ anything missing:
 curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | bash &&
 /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
 ```
+
+On a graphical Linux machine without sudo, Ghostty falls back to a community
+AppImage when it is not already installed. It is verified against a pinned
+checksum and extracted under `~/.local/opt`, so it does not depend on FUSE.
+
+Ghostty remains untouched when provisioning a server over SSH because `ui` is
+skipped. Set `UI=1` when provisioning a graphical workstation over SSH.
 
 ## Over SSH
 

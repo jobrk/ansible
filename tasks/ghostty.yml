@@ -1,0 +1,131 @@
+---
+- name: Check for Ghostty
+  ansible.builtin.command: ghostty --version
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+  register: ghostty_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Check for the Ghostty COPR (Fedora)
+  when:
+    - ghostty_check.rc != 0
+    - ansible_facts['distribution'] == 'Fedora'
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
+  register: ghostty_copr
+
+- name: Enable the Ghostty COPR (Fedora)
+  become: true
+  tags: become
+  when:
+    - ghostty_check.rc != 0
+    - ansible_facts['distribution'] == 'Fedora'
+    - not (ghostty_copr.stat.exists | default(false))
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - scottames/ghostty
+  changed_when: true
+
+- name: Install Ghostty (Fedora)
+  become: true
+  tags: become
+  when:
+    - ghostty_check.rc != 0
+    - ansible_facts['distribution'] == 'Fedora'
+  ansible.builtin.dnf:
+    name: ghostty
+
+- name: Install Ghostty (Ubuntu)
+  become: true
+  tags: become
+  when:
+    - ghostty_check.rc != 0
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_version'] is version('26.04', '>=')
+  ansible.builtin.apt:
+    name: ghostty
+
+- name: Check for Ghostty after system packages
+  ansible.builtin.command: ghostty --version
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:{{ lookup('env', 'PATH') }}"
+  register: ghostty_package_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install Ghostty AppImage for the user
+  when: ghostty_package_check.rc != 0
+  vars:
+    ghostty_version: 1.3.1
+    ghostty_arch: >-
+      {{ 'aarch64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'x86_64' }}
+    ghostty_dir: "{{ lookup('env', 'HOME') }}/.local/opt/ghostty/{{ ghostty_version }}"
+    ghostty_image: "{{ ghostty_dir }}/Ghostty.AppImage"
+    ghostty_checksums:
+      x86_64: fde48d2b716afd1978766879bbf1aae30dd305e8ad86a1037a2614a14d82dc28
+      aarch64: 55b7d1e2073b80954e23167a70f9e5994189d81e954d36dad4d2dc2d2fe6c121
+  block:
+    - name: Check Ghostty AppImage architecture support
+      ansible.builtin.assert:
+        that: ansible_facts['architecture'] in ['x86_64', 'amd64', 'aarch64', 'arm64']
+        fail_msg: "Ghostty AppImage does not support {{ ansible_facts['architecture'] }}"
+
+    - name: Create Ghostty user directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ ghostty_dir }}"
+        - "{{ lookup('env', 'HOME') }}/.local/bin"
+        - "{{ lookup('env', 'HOME') }}/.local/share/applications"
+
+    - name: Download the pinned Ghostty AppImage
+      ansible.builtin.get_url:
+        url: >-
+          https://github.com/pkgforge-dev/ghostty-appimage/releases/download/v{{ ghostty_version }}/Ghostty-{{ ghostty_version }}-{{ ghostty_arch }}.AppImage
+        dest: "{{ ghostty_image }}"
+        checksum: "sha256:{{ ghostty_checksums[ghostty_arch] }}"
+        mode: "0755"
+
+    - name: Extract Ghostty without FUSE
+      ansible.builtin.command:
+        argv:
+          - "{{ ghostty_image }}"
+          - --appimage-extract
+        chdir: "{{ ghostty_dir }}"
+        creates: "{{ ghostty_dir }}/squashfs-root/AppRun"
+
+    - name: Create the Ghostty launcher
+      ansible.builtin.copy:
+        dest: "{{ ghostty_dir }}/ghostty"
+        mode: "0755"
+        content: |
+          #!/bin/sh
+          exec "{{ ghostty_dir }}/squashfs-root/AppRun" "$@"
+
+    - name: Create the Ghostty command
+      ansible.builtin.file:
+        src: "{{ ghostty_dir }}/ghostty"
+        dest: "{{ lookup('env', 'HOME') }}/.local/bin/ghostty"
+        state: link
+
+    - name: Add Ghostty to the desktop launcher
+      ansible.builtin.copy:
+        dest: "{{ lookup('env', 'HOME') }}/.local/share/applications/com.mitchellh.ghostty.desktop"
+        mode: "0644"
+        content: |
+          [Desktop Entry]
+          Type=Application
+          Name=Ghostty
+          Exec={{ lookup('env', 'HOME') }}/.local/bin/ghostty
+          Icon=utilities-terminal
+          Categories=System;TerminalEmulator;
+          Terminal=false

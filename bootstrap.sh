@@ -68,7 +68,9 @@ fi
 
 log "Fetching playbook"
 if [[ -d $DEST/.git ]]; then
-  git -C "$DEST" pull --ff-only
+  if git -C "$DEST" symbolic-ref --quiet HEAD > /dev/null; then
+    git -C "$DEST" pull --ff-only
+  fi
 else
   git clone "$REPO" "$DEST"
 fi
@@ -83,7 +85,7 @@ fi
 
 if [[ $(id -u) == 0 ]] || sudo -n -k true 2> /dev/null; then
   :
-elif [[ -t 0 ]]; then
+elif command -v sudo > /dev/null && [[ -t 0 ]]; then
   set -- "$@" -K
 else
   add_skip_tag become

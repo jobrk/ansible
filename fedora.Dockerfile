@@ -14,9 +14,9 @@ WORKDIR /home/jobrk
 FROM jobrk
 RUN pipx install --include-deps ansible
 COPY --chown=jobrk . ./ansible
-RUN --mount=type=secret,id=GITHUB_TOKEN \
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml
-RUN --mount=type=secret,id=GITHUB_TOKEN \
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
 USER root
@@ -26,7 +26,7 @@ RUN grep -qx 'XSession=hyprland' /var/lib/AccountsService/users/jobrk && \
     grep -qx 'user = "greetd"' /etc/greetd/config.toml && \
     test -x /usr/bin/agreety && \
     test -x /usr/bin/start-hyprland && \
-    rpm -q cliphist flatpak hyprland-guiutils hyprpolkitagent mako qt5-qtwayland qt6-qtwayland \
+    rpm -q cliphist flatpak ghostty hyprland-guiutils hyprpolkitagent mako qt5-qtwayland qt6-qtwayland \
       waybar wl-clipboard xdg-utils && \
     systemctl get-default | grep -qx graphical.target && \
     systemctl is-enabled greetd | grep -qx enabled
