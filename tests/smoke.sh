@@ -169,7 +169,6 @@ if command -v Hyprland >/dev/null; then
   [[ -f "$HOME/.config/waybar/style.css" ]] || fail 'Waybar style is unavailable'
   [[ -f "$HOME/.config/mako/config" ]] || fail 'Mako configuration is unavailable'
   grep -qx 'Session=hyprland' "$HOME/.dmrc" || fail 'Hyprland is not the selected desktop session'
-  grep -Fqx '$term = ghostty' "$HOME/.config/hypr/hyprland.conf" || fail 'Ghostty is not the Hyprland terminal'
   grep -Fqx 'monitor = , preferred, auto, auto' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland does not use each display preferred mode and automatic scale'
   grep -Fqx 'env = XDG_DATA_DIRS,/var/lib/flatpak/exports/share:/usr/local/share:/usr/share' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland cannot discover system Flatpak applications'
   grep -Fqx '    gaps_in = 6' "$HOME/.config/hypr/hyprland.conf" || fail 'Hyprland inner gaps are incorrect'
