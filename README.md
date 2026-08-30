@@ -13,8 +13,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap
 
 Bootstrap installs ansible, clones or updates this repo, and infers flags:
 `ui` skipped over SSH (force with `UI=1`), `-K` only when sudo needs a
-password, `become` skipped when non-interactive without sudo. Env overrides:
-`SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`.
+password, `become` skipped when sudo is unavailable or non-interactive. Env overrides:
+`SKIP_TAGS`, `ANSIBLE_REPO`, `ANSIBLE_DEST`, `GHOSTTY_APPIMAGE`.
 
 Manual equivalent:
 
@@ -42,7 +42,8 @@ install; delete the local copy to hand the command back to the distro.
 |---|---|---|
 | Compilers, make, cmake, git, python3, tmux, zsh, unzip, locales | dnf/apt | none — administrator |
 | Go, Java 25, .NET 10 SDKs | dnf/apt | none — administrator |
-| Hyprland desktop, greetd, Waybar, portals, Zen Browser, Ghostty on Fedora/Ubuntu 26.04+ (`ui`) | dnf/apt + Flatpak | none — administrator |
+| Hyprland desktop, greetd, Waybar, portals, Zen Browser (`ui`) | dnf/apt + Flatpak | none — administrator |
+| Ghostty (`ui`) | dnf/apt | opt-in pinned AppImage (`GHOSTTY_APPIMAGE=1`) |
 | fzf, ripgrep, fd, bat, delta, jq, direnv | dnf/apt | pinned release binaries |
 | Stow | dnf/apt | built from source (needs make and perl) |
 | pipx | dnf/apt | `pip install --user` |
@@ -57,6 +58,17 @@ anything missing:
 curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh | bash &&
 /bin/zsh -lic 'bash ~/ansible/tests/smoke.sh'
 ```
+
+On a graphical Linux machine without sudo, opt into the community Ghostty
+AppImage. It is verified against a pinned checksum and extracted under
+`~/.local/opt`, so it does not depend on FUSE:
+
+```sh
+GHOSTTY_APPIMAGE=1 bash <(curl -fsSL https://raw.githubusercontent.com/jobrk/ansible/main/bootstrap.sh)
+```
+
+Ghostty remains local when provisioning a server over SSH; `ui` is skipped
+unless explicitly forced with `UI=1`.
 
 ## Over SSH
 

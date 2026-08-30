@@ -23,12 +23,22 @@ RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
 RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
     ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml --tags all,handoff --skip-tags become,ui | tee /tmp/second-run.log && \
     grep -E 'changed=0.*failed=0' /tmp/second-run.log
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
+    ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml \
+      --tags ghostty-appimage --skip-tags become -e ghostty_appimage=true
+RUN --mount=type=secret,id=GITHUB_TOKEN,uid=1000 \
+    ./.local/bin/ansible-playbook -i ./ansible/inventory.ini ./ansible/main.yml \
+      --tags ghostty-appimage --skip-tags become -e ghostty_appimage=true | tee /tmp/ghostty-second-run.log && \
+    grep -E 'changed=0.*failed=0' /tmp/ghostty-second-run.log
 RUN export PATH="$HOME/.local/bin:$PATH" && \
     for command in bat delta direnv fd fzf jq pipx rg stow; do \
       command -v "$command" > /dev/null || { echo "missing: $command"; exit 1; }; \
     done && \
     fzf --version && rg --version | head -1 && stow --version | head -1
 RUN test -x ~/.local/bin/stow && test -x ~/.local/bin/fzf
+RUN test -x ~/.local/bin/ghostty && \
+    test -f ~/.local/share/applications/com.mitchellh.ghostty.desktop && \
+    ~/.local/bin/ghostty --version | grep -q '^Ghostty '
 RUN test -L ~/.zshrc && test -L ~/.config/nvim
 RUN grep -q 'exec zsh' ~/.bash_profile
 ENV TERM=xterm-256color

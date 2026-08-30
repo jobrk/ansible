@@ -10,6 +10,7 @@
       {{ lookup('env', 'HOME') ~ '/.local/bin/bat'
          if ansible_facts['os_family'] == 'Debian' else 'bat' }}
     tree_sitter_version: 0.26.11
+    ghostty_appimage: "{{ lookup('env', 'GHOSTTY_APPIMAGE') | bool }}"
   pre_tasks:
     - name: Load operating system variables
       ansible.builtin.include_vars: "vars/{{ ansible_facts['os_family'] }}.yml"
