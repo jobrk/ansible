@@ -36,3 +36,24 @@
   ansible.builtin.command: "{{ fnm_executable }} install --lts --corepack-enabled"
   register: fnm_install
   changed_when: "'already installed' not in fnm_install.stderr"
+
+- name: Find latest LTS node version
+  ansible.builtin.command: "{{ fnm_executable }} list-remote --lts --latest"
+  register: fnm_latest_lts
+  changed_when: false
+  check_mode: false
+
+- name: Read default node version
+  ansible.builtin.command: "{{ fnm_executable }} default"
+  register: fnm_default
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Use latest LTS node by default
+  ansible.builtin.command: "{{ fnm_executable }} default lts-latest"
+  when: >-
+    fnm_default.rc != 0 or
+    (fnm_default.stdout | trim) !=
+    (fnm_latest_lts.stdout | regex_search('v[0-9]+\\.[0-9]+\\.[0-9]+'))
+  changed_when: true
