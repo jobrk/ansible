@@ -56,6 +56,9 @@ install; delete the local copy to hand the command back to the distro.
 | zsh as the login shell | chsh | opt-in `--tags handoff`: `~/.bash_profile` hands interactive logins to zsh |
 | Rust, Node LTS, Neovim, oh-my-zsh + plugins, fzf-git, fonts, tpm, Mason tools, parsers, dotfiles | user-space | same — sudo never needed |
 
+The Linux Tree-sitter CLI pin (`tree_sitter_version` in `main.yml`) satisfies
+the Neovim configuration's 0.26.1 minimum. macOS installs the CLI through Homebrew.
+
 Without sudo, run bootstrap non-interactively and let the smoke test report
 anything missing:
 
@@ -198,3 +201,7 @@ upgrade an installed app on every run. Core behavior is verified on macOS 27.2
 (26B123); physical gestures, sleep/wake and external displays remain unverified.
 CI validates installation/idempotence without loading code into Dock or granting
 Accessibility permissions.
+
+## License
+
+[MIT](LICENSE). Installed packages and external repositories retain their own licenses.
