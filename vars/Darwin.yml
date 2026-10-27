@@ -5,7 +5,7 @@ homebrew_prefix: "{{ '/opt/homebrew' if ansible_facts['architecture'] == 'arm64'
 window_effects_enabled: false
 window_effects_autoload: false
 desktop_activate: false
-window_effects_revision: 332189a4e9e1ddc98ecab230717a5a27b84b96a3
+window_effects_revision: ba3b65067d27f562d3cf0be8053a3f77bf5cc101
 window_effects_source: "{{ ansible_facts['user_dir'] }}/.local/share/window-effects/source"
 window_effects_backend: /Library/Application Support/WindowEffects
 

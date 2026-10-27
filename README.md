@@ -116,7 +116,7 @@ macOS can't be containerized: `--check` first, then a real run.
 
 ## macOS desktop
 
-The current workstation transition and remaining acceptance checks are recorded in
+The workstation transition and validation limits are recorded in
 [docs/desktop-migration.md](docs/desktop-migration.md).
 
 AeroSpace owns tiling, workspaces and shortcuts. [Window Effects](https://github.com/jobrk/window-effects)
@@ -158,9 +158,23 @@ Installation does not launch either app. Follow the
 to consolidate existing windows, stop/disable yabai and skhd, restart Dock and
 load our backend. AeroSpace needs interactive Accessibility authorization. After
 that first cutover, add `-e desktop_activate=true` to start AeroSpace and the
-watcher during provisioning. Activation refuses if yabai/skhd is running. Existing
-packages, configuration and the yabai sudoers entry remain available for rollback.
+watcher during provisioning. Activation refuses if yabai/skhd is running.
 The playbook never changes SIP or restarts Dock automatically.
+
+After accepting the new desktop, archive local yabai/skhd configuration and retire
+the old installation explicitly:
+
+```sh
+ansible-playbook -i inventory.ini main.yml --tags desktop-cleanup --ask-become-pass
+```
+
+Cleanup requires the old daemons to be stopped and AeroSpace plus the appearance
+backend to respond. It removes yabai/skhd packages, current/historical LaunchAgent
+files, Stow links into this checkout, `/Library/ScriptingAdditions/yabai.osax` and
+`/etc/sudoers.d/yabai`. Custom config directories, native Spaces, SIP and Window
+Effects' autoload rule are untouched. This tag is excluded from normal runs.
+`--skip-tags desktop-cleanup-root` runs only the user-owned portion. Use the full
+`desktop-cleanup` tag for privileged cleanup too, so its prerequisites run.
 
 For a backend upgrade: stop the watcher, run `window-effects restore`, provision
 the new pinned revision, restart Dock, and start the watcher again. Replacing the
@@ -173,6 +187,7 @@ out/in or relaunch apps to apply the dragging preference. Whole domains and
 unverified animation/shadow keys are not copied.
 
 AeroSpace requires 0.21.3-Beta or newer. Homebrew uses `state: present` and does not
-upgrade an installed app on every run. macOS 27 still needs interactive acceptance;
+upgrade an installed app on every run. Core behavior is verified on macOS 27.2
+(26B123); physical gestures, sleep/wake and external displays remain unverified.
 CI validates installation/idempotence without loading code into Dock or granting
 Accessibility permissions.
