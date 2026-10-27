@@ -78,10 +78,20 @@
     - item.stat.islnk | default(false)
     - item.stat.lnk_source == dotfiles_dest ~ '/' ~ item.item ~ '/.config/' ~ item.item
 
+- name: List installed formulae without loading legacy tap definitions
+  ansible.builtin.command: brew list --formula -1
+  register: desktop_installed_formulae
+  changed_when: false
+  check_mode: false
+
+# The Homebrew module queries formula metadata even for state: absent. Filter
+# first so subsequent runs do not resolve removed formulae from an untrusted tap.
 - name: Uninstall the retired window manager and shortcut daemon
   community.general.homebrew:
-    name: [yabai, skhd]
+    name: "{{ ['yabai', 'skhd'] | intersect(desktop_installed_formulae.stdout_lines) }}"
     state: absent
+    force_formula: true
+  when: "['yabai', 'skhd'] | intersect(desktop_installed_formulae.stdout_lines) | length > 0"
 
 - name: Remove privileged yabai remnants
   become: true
