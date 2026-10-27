@@ -116,6 +116,9 @@ macOS can't be containerized: `--check` first, then a real run.
 
 ## macOS desktop
 
+The current workstation transition and remaining acceptance checks are recorded in
+[docs/desktop-migration.md](docs/desktop-migration.md).
+
 AeroSpace owns tiling, workspaces and shortcuts. [Window Effects](https://github.com/jobrk/window-effects)
 provides shadow removal and active/inactive opacity. Dotfiles owns both configs;
 Ansible owns installation and selected native preferences. Ghostty's existing
