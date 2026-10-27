@@ -102,7 +102,9 @@ $EDITOR ~/.config/zsh/secrets.zsh
 ```
 
 Sourced by the dotfiles zsh configuration; never tracked or managed by
-Ansible. Also edit the seeded `~/.gitconfig.local` (placeholder email).
+Ansible. Also edit the seeded `~/.gitconfig.local` (placeholder email). For
+public commits, use your GitHub `noreply` address from
+[email settings](https://github.com/settings/emails).
 
 ## Testing
 
