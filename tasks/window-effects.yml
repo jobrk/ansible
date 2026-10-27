@@ -1,0 +1,165 @@
+---
+- name: Check Window Effects prerequisites
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['architecture'] == 'arm64'
+      - window_effects_revision is match('^[0-9a-f]{40}$')
+    fail_msg: Window Effects requires Apple Silicon and an immutable source revision.
+
+- name: Check desktop policy checkout
+  ansible.builtin.stat:
+    path: "{{ dotfiles_dest }}/window-effects/.config/window-effects/config.json"
+  register: window_effects_policy
+
+- name: Require desktop dotfiles before installing the watcher
+  ansible.builtin.assert:
+    that: window_effects_policy.stat.exists
+    fail_msg: Update and stow the dotfiles checkout first (main.yml --tags dotfiles).
+
+- name: Stow desktop policy
+  ansible.builtin.command:
+    argv: [stow, "--target={{ ansible_facts['user_dir'] }}", --verbose, aerospace, window-effects]
+    chdir: "{{ dotfiles_dest }}"
+  register: desktop_stow
+  changed_when: "'LINK:' in desktop_stow.stderr or 'UNLINK:' in desktop_stow.stderr"
+
+- name: Create Window Effects source parent
+  ansible.builtin.file:
+    path: "{{ window_effects_source | dirname }}"
+    state: directory
+    mode: "0755"
+
+- name: Fetch pinned Window Effects source
+  ansible.builtin.git:
+    repo: https://github.com/jobrk/window-effects.git
+    dest: "{{ window_effects_source }}"
+    version: "{{ window_effects_revision }}"
+
+- name: Build signed Window Effects artifacts
+  ansible.builtin.command: make all
+  args:
+    chdir: "{{ window_effects_source }}"
+  register: window_effects_build
+  changed_when: "'xcrun clang' in window_effects_build.stdout"
+
+- name: Check built artifacts (also supports first-run check mode)
+  ansible.builtin.stat:
+    path: "{{ window_effects_source }}/build/loader"
+  register: window_effects_artifact
+
+- name: Install privileged Window Effects backend
+  become: true
+  tags: window-effects-backend
+  block:
+    - name: Create backend directory
+      ansible.builtin.file:
+        path: "{{ window_effects_backend }}"
+        state: directory
+        owner: root
+        group: wheel
+        mode: "0755"
+
+    - name: Install signed backend artifacts
+      ansible.builtin.copy:
+        src: "{{ window_effects_source }}/build/{{ item }}"
+        remote_src: true
+        dest: "{{ window_effects_backend }}/{{ item }}"
+        owner: root
+        group: wheel
+        mode: "0755"
+      loop: [loader, payload.dylib]
+      when: window_effects_artifact.stat.exists
+
+    - name: Hash installed loader for optional autoload
+      ansible.builtin.stat:
+        path: "{{ window_effects_backend }}/loader"
+        checksum_algorithm: sha256
+      register: window_effects_loader
+
+    - name: Create sudoers include directory
+      ansible.builtin.file:
+        path: /etc/sudoers.d
+        state: directory
+        owner: root
+        group: wheel
+        mode: "0755"
+      when: window_effects_autoload | bool
+
+    - name: Allow only this root-owned loader with no arguments
+      ansible.builtin.template:
+        src: window-effects-sudoers.j2
+        dest: /etc/sudoers.d/window-effects
+        owner: root
+        group: wheel
+        mode: "0440"
+        validate: /usr/sbin/visudo -cf %s
+      when:
+        - window_effects_autoload | bool
+        - window_effects_loader.stat.exists
+
+    - name: Remove autoload rule when explicitly disabled
+      ansible.builtin.file:
+        path: /etc/sudoers.d/window-effects
+        state: absent
+      when: not window_effects_autoload | bool
+
+- name: Create Window Effects user directories
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: [.local/bin, Library/LaunchAgents, Library/Logs/window-effects]
+
+- name: Install Window Effects CLI
+  ansible.builtin.copy:
+    src: "{{ window_effects_source }}/build/window-effects"
+    remote_src: true
+    dest: "{{ ansible_facts['user_dir'] }}/.local/bin/window-effects"
+    mode: "0755"
+  when: window_effects_artifact.stat.exists
+  register: window_effects_cli
+
+- name: Install Window Effects LaunchAgent
+  ansible.builtin.template:
+    src: window-effects.plist.j2
+    dest: "{{ ansible_facts['user_dir'] }}/Library/LaunchAgents/local.window-effects.plist"
+    mode: "0644"
+  register: window_effects_agent
+
+- name: Validate installed appearance policy
+  ansible.builtin.command: "{{ ansible_facts['user_dir'] }}/.local/bin/window-effects check-config"
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Activate the desktop when explicitly requested
+  when: desktop_activate | bool
+  block:
+    - name: Check for conflicting window managers
+      ansible.builtin.command: pgrep -x 'yabai|skhd'
+      register: desktop_conflicts
+      changed_when: false
+      failed_when: desktop_conflicts.rc not in [0, 1]
+      check_mode: false
+
+    - name: Require the old services to be stopped
+      ansible.builtin.assert:
+        that: desktop_conflicts.rc == 1
+        fail_msg: Follow the dotfiles migration guide to stop yabai/skhd and restart Dock first.
+
+    - name: Check whether AeroSpace is running
+      ansible.builtin.command: pgrep -x AeroSpace
+      register: aerospace_running
+      changed_when: false
+      failed_when: aerospace_running.rc not in [0, 1]
+      check_mode: false
+
+    - name: Start AeroSpace
+      ansible.builtin.command: open -a AeroSpace
+      when: aerospace_running.rc == 1
+      changed_when: true
+
+    - name: Start Window Effects watcher
+      community.general.launchd:
+        name: local.window-effects
+        state: "{{ 'restarted' if window_effects_cli.changed or window_effects_agent.changed else 'started' }}"
+        enabled: true

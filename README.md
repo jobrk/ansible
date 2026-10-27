@@ -113,3 +113,63 @@ asserts the user-space fallbacks. GitHub Actions runs all four plus a native
 macOS job on every push.
 
 macOS can't be containerized: `--check` first, then a real run.
+
+## macOS desktop
+
+AeroSpace owns tiling, workspaces and shortcuts. [Window Effects](https://github.com/jobrk/window-effects)
+provides shadow removal and active/inactive opacity. Dotfiles owns both configs;
+Ansible owns installation and selected native preferences. Ghostty's existing
+`local.ghostty` (including fonts and `window-decoration = none`) is preserved.
+
+Install the packages/preferences, then update and stow dotfiles:
+
+```sh
+ansible-playbook -i inventory.ini main.yml --tags aerospace,macos-preferences --check --diff
+ansible-playbook -i inventory.ini main.yml --tags aerospace,macos-preferences
+ansible-playbook -i inventory.ini main.yml --tags dotfiles
+```
+
+On a checkout with local edits, update it deliberately and run
+`stow --target="$HOME" aerospace window-effects` inside that checkout instead
+of letting the dotfiles git task update it.
+
+The appearance backend is opt-in because it requires Apple Silicon, Xcode Command
+Line Tools, and Window Effects' documented SIP/arm64e prerequisites. Once those
+are satisfied, install it with administrator authentication:
+
+```sh
+ansible-playbook -i inventory.ini main.yml --tags window-effects --ask-become-pass \
+  -e window_effects_enabled=true -e window_effects_autoload=true
+```
+
+The source is pinned to a full commit in `vars/Darwin.yml` and built in
+`~/.local/share/window-effects/source`. Backend files are root-owned; the CLI,
+LaunchAgent and policy are installed as the desktop user. Config is stowed before
+the watcher is installed. `window_effects_autoload=true` adds one hash-pinned
+sudoers command: the root-owned loader with no arguments. It permits automatic
+recovery after Dock restarts without password prompts. Setting it to false removes
+that rule; the backend then needs manual loading after login or Dock restart.
+
+Installation does not launch either app. Follow the
+[dotfiles migration/rollback guide](https://github.com/jobrk/dotfiles/blob/main/aerospace/README.md)
+to consolidate existing windows, stop/disable yabai and skhd, restart Dock and
+load our backend. AeroSpace needs interactive Accessibility authorization. After
+that first cutover, add `-e desktop_activate=true` to start AeroSpace and the
+watcher during provisioning. Activation refuses if yabai/skhd is running. Existing
+packages, configuration and the yabai sudoers entry remain available for rollback.
+The playbook never changes SIP or restarts Dock automatically.
+
+For a backend upgrade: stop the watcher, run `window-effects restore`, provision
+the new pinned revision, restart Dock, and start the watcher again. Replacing the
+on-disk payload does not replace code already resident in Dock. Provision with
+`window_effects_autoload=true` again to refresh the loader hash after upgrades.
+
+`tasks/macos-preferences.yml` versions keyboard repeat, immediate Dock reveal/hide,
+menu-bar hiding, stable native Space ordering and native Ctrl+Cmd dragging. Log
+out/in or relaunch apps to apply the dragging preference. Whole domains and
+unverified animation/shadow keys are not copied.
+
+AeroSpace requires 0.21.3-Beta or newer. Homebrew uses `state: present` and does not
+upgrade an installed app on every run. macOS 27 still needs interactive acceptance;
+CI validates installation/idempotence without loading code into Dock or granting
+Accessibility permissions.

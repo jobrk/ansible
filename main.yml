@@ -69,6 +69,13 @@
       ansible.builtin.import_tasks: tasks/dotfiles.yml
       tags: dotfiles
 
+    - name: Window Effects (macOS, opt-in)
+      ansible.builtin.import_tasks: tasks/window-effects.yml
+      when:
+        - ansible_facts['system'] == 'Darwin'
+        - window_effects_enabled | default(false) | bool
+      tags: [ui, window-effects]
+
     - name: Zen Browser
       ansible.builtin.import_tasks: tasks/zen.yml
       when: ansible_facts['system'] == 'Linux'

@@ -73,9 +73,19 @@ jobs:
         run: ansible-galaxy collection install -r requirements.yml
       - name: Provision
         run: ansible-playbook -i inventory.ini main.yml --skip-tags ui
+      - name: Apply macOS desktop preferences
+        run: ansible-playbook -i inventory.ini main.yml --tags macos-preferences
+      - name: Install pinned Window Effects without activating the desktop
+        run: >-
+          ansible-playbook -i inventory.ini main.yml --tags window-effects
+          -e window_effects_enabled=true -e window_effects_autoload=true
       - name: Verify idempotence
         run: |
           ansible-playbook -i inventory.ini main.yml --skip-tags ui | tee /tmp/second-run.log
           grep -E 'changed=0.*failed=0' /tmp/second-run.log
+          ansible-playbook -i inventory.ini main.yml --tags macos-preferences | tee /tmp/preferences-second-run.log
+          grep -E 'changed=0.*failed=0' /tmp/preferences-second-run.log
+          ansible-playbook -i inventory.ini main.yml --tags window-effects -e window_effects_enabled=true -e window_effects_autoload=true | tee /tmp/effects-second-run.log
+          grep -E 'changed=0.*failed=0' /tmp/effects-second-run.log
       - name: Run smoke test
         run: /bin/zsh -lic 'bash "$GITHUB_WORKSPACE/tests/smoke.sh"'

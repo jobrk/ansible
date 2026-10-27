@@ -1,6 +1,14 @@
 ---
 homebrew_prefix: "{{ '/opt/homebrew' if ansible_facts['architecture'] == 'arm64' else '/usr/local' }}"
 
+# Explicit opt-ins: the appearance backend needs the documented SIP/arm64e setup.
+window_effects_enabled: false
+window_effects_autoload: false
+desktop_activate: false
+window_effects_revision: 76e72b4b4f4aa7b2042c755dc5c2e77f59b4ce34
+window_effects_source: "{{ ansible_facts['user_dir'] }}/.local/share/window-effects/source"
+window_effects_backend: /Library/Application Support/WindowEffects
+
 core_packages:
   - bat
   - direnv

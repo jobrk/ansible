@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>local.window-effects</string>
+  <key>ProgramArguments</key><array>
+    <string>{{ ansible_facts['user_dir'] | e }}/.local/bin/window-effects</string>
+    <string>watch</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>{{ ansible_facts['user_dir'] | e }}/Library/Logs/window-effects/output.log</string>
+  <key>StandardErrorPath</key><string>{{ ansible_facts['user_dir'] | e }}/Library/Logs/window-effects/error.log</string>
+</dict></plist>

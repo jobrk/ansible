@@ -1,0 +1,2 @@
+# Managed by Ansible; only the fixed, root-owned loader.
+{{ ansible_facts['user_id'] }} ALL=(root) NOPASSWD: sha256:{{ window_effects_loader.stat.checksum }} /Library/Application\ Support/WindowEffects/loader ""

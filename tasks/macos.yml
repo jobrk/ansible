@@ -1,29 +1,16 @@
 ---
-- name: Add skhd and yabai Homebrew tap
+- name: Add AeroSpace Homebrew tap
   community.general.homebrew_tap:
-    name: koekeishiya/formulae
+    name: nikitabobko/tap
     state: present
+  tags: aerospace
 
-- name: Install skhd and yabai
-  community.general.homebrew:
-    name:
-      - koekeishiya/formulae/skhd
-      - koekeishiya/formulae/yabai
+- name: Install AeroSpace
+  community.general.homebrew_cask:
+    name: nikitabobko/tap/aerospace
+    state: present
+  tags: aerospace
 
-- name: Fast key repeat
-  community.general.osx_defaults:
-    key: KeyRepeat
-    type: float
-    value: 2.0
-
-- name: Short delay until key repeat
-  community.general.osx_defaults:
-    key: InitialKeyRepeat
-    type: float
-    value: 15.0
-
-- name: Disable press-and-hold accent popup (repeat keys instead)
-  community.general.osx_defaults:
-    key: ApplePressAndHoldEnabled
-    type: bool
-    value: false
+- name: Desktop preferences
+  ansible.builtin.import_tasks: macos-preferences.yml
+  tags: macos-preferences
