@@ -73,8 +73,10 @@ Dock recovery and focus/opacity updates pass with no stale journal entries.
     display reconnection. Only one built-in display was connected during testing.
 
 11. [ ] Verify **macOS 27** on the actual target build.
-    Repeat the checks in the [Window Effects compatibility record](https://github.com/jobrk/window-effects/blob/main/COMPATIBILITY.md)
-    and record the OS build and all three repository revisions. macOS 26 tests do not establish macOS 27 support.
+    Core checks now pass on **macOS 27.2 (26B123)**; details are below and in the
+    [Window Effects compatibility record](https://github.com/jobrk/window-effects/blob/main/COMPATIBILITY.md).
+    App exclusions, AeroSpace exit/restart and the remaining daily-use checks
+    still need to be repeated on this build.
 
 12. [ ] Retire the old setup after acceptance.
     Remove obsolete yabai/skhd packages, scripting addition files and their own
@@ -94,3 +96,23 @@ An isolated AppKit experiment on macOS 26.6.2 removed that highlight with
 `drawsDecorationView = NO` on the titlebar container and restored the original
 value. Applying it to Zen would require an application-side change. No browser
 injection or rim-removal mechanism is part of the deployed helper.
+
+## macOS 27 update verification
+
+After the upgrade to macOS 27.2 (26B123), AeroSpace 0.21.3-Beta and the Window
+Effects v0.1.1 watcher started automatically. The installed backend still matches
+the signed artifacts built from `332189a4e9e1ddc98ecab230717a5a27b84b96a3`.
+Verification used helper checkout `174599a`, dotfiles `728257d` and Ansible
+`0bed8a6`; the provisioning pin remains unchanged.
+
+Both arm64 and arm64e test suites pass. Live checks passed for foreign-window
+shadow/opacity changes, restoration, closed-window cleanup, watcher shutdown and
+restart, focus dimming between Ghostty and Zen, and automatic backend recovery
+after Dock restart. Window Effects is loaded in Dock; yabai's payload is absent. All eleven
+managed keyboard/desktop preferences retained their expected values, and both
+configuration files still resolve to the dotfiles checkout.
+
+The installed CLI's `macOS27Tested: false` field is historical hardcoded metadata,
+not a runtime failure; its removal is already in the helper's newer source.
+Yabai 7.1.25 and skhd 0.3.9 remain installed, with their current services disabled
+and neither daemon running. No legacy files were removed during this check.
