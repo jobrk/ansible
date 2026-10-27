@@ -144,9 +144,26 @@ On a checkout with local edits, update it deliberately and run
 `stow --target="$HOME" aerospace window-effects` inside that checkout instead
 of letting the dotfiles git task update it.
 
+On a corporate Mac where SIP must remain enabled, keep the default
+`window_effects_enabled: false` in `vars/Darwin.yml`. Provisioning skips the
+appearance backend, CLI, LaunchAgent and sudoers rule. AeroSpace still provides
+tiling, shortcuts and instant workspace switching if company policy permits
+its installation and Accessibility access. Windows keep their normal shadows
+and opacity. Ansible never changes SIP or boot arguments.
+
+Open AeroSpace and grant its interactive Accessibility authorization. This works
+independently of the optional appearance backend:
+
+```sh
+open -a AeroSpace
+```
+
 The appearance backend is opt-in because it requires Apple Silicon, Xcode Command
-Line Tools, and Window Effects' documented SIP/arm64e prerequisites. Once those
-are satisfied, install it with administrator authentication:
+Line Tools, and Window Effects' documented SIP/arm64e prerequisites. The playbook
+does not currently check SIP before installation: explicitly enabling the helper
+can install it successfully even though its backend cannot load. If started in
+that state, the watcher retries and logs backend errors. Enable it only when the
+prerequisites are satisfied, then install with administrator authentication:
 
 ```sh
 ansible-playbook -i inventory.ini main.yml --tags window-effects --ask-become-pass \
@@ -162,15 +179,10 @@ recovery after Dock restarts without password prompts. With the default `false`,
 provisioning does not manage that rule; a fresh installation then needs manual
 loading after login or Dock restart.
 
-Open AeroSpace and grant its interactive Accessibility authorization:
-
-```sh
-open -a AeroSpace
-```
-
-Then repeat the helper installation command with `-e desktop_activate=true` to
-start the watcher. Activation checks for conflicting window managers and leaves
-them untouched. The playbook never changes SIP or restarts Dock automatically.
+After granting AeroSpace Accessibility access, repeat the helper installation
+command with `-e desktop_activate=true` to start the watcher. Activation checks
+for conflicting window managers and leaves them untouched. The playbook never
+changes SIP or restarts Dock automatically.
 See the [dotfiles desktop guide](https://github.com/jobrk/dotfiles/blob/main/aerospace/README.md)
 for controls and the helper's documentation for upgrades or removal.
 
