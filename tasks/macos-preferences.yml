@@ -12,7 +12,7 @@
     - { domain: NSGlobalDomain, key: InitialKeyRepeat, type: float, value: 15.0 }
     - { domain: NSGlobalDomain, key: ApplePressAndHoldEnabled, type: bool, value: false }
     - { domain: NSGlobalDomain, key: _HIHideMenuBar, type: bool, value: true }
-    # Ctrl+Cmd-drag anywhere in a window; replaces yabai's Ctrl-left-drag.
+    # Ctrl+Cmd-drag anywhere in a window.
     - { domain: NSGlobalDomain, key: NSWindowShouldDragOnGesture, type: bool, value: true }
     - { domain: com.apple.dock, key: autohide, type: bool, value: true }
     - { domain: com.apple.dock, key: autohide-delay, type: int, value: 0 }
@@ -22,5 +22,4 @@
     - { domain: com.apple.WindowManager, key: EnableStandardClickToShowDesktop, type: bool, value: false }
   loop_control:
     label: "{{ item.domain }} / {{ item.key }}"
-# Log out/in after first application. Avoid restarting Dock while another window
-# manager and its dock_did_restart hook may still be running during migration.
+# Log out/in after first application. Provisioning does not restart Dock.

@@ -97,12 +97,6 @@
         - window_effects_autoload | bool
         - window_effects_loader.stat.exists
 
-    - name: Remove autoload rule when explicitly disabled
-      ansible.builtin.file:
-        path: /etc/sudoers.d/window-effects
-        state: absent
-      when: not window_effects_autoload | bool
-
 - name: Create Window Effects user directories
   ansible.builtin.file:
     path: "{{ ansible_facts['user_dir'] }}/{{ item }}"

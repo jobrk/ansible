@@ -76,11 +76,6 @@
         - window_effects_enabled | default(false) | bool
       tags: [ui, window-effects]
 
-    - name: Retire the previous macOS desktop (explicit cleanup only)
-      ansible.builtin.import_tasks: tasks/desktop-cleanup.yml
-      when: ansible_facts['system'] == 'Darwin'
-      tags: [never, desktop-cleanup]
-
     - name: Zen Browser
       ansible.builtin.import_tasks: tasks/zen.yml
       when: ansible_facts['system'] == 'Linux'

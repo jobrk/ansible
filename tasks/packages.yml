@@ -171,16 +171,13 @@
     follow: false
   register: display_manager_service
 
-- name: Decide whether greetd should replace the display manager
+- name: Configure greetd only when absent or already selected
   tags: ui
   when: ansible_facts['system'] == 'Linux'
   ansible.builtin.set_fact:
-    install_greetd: >-
-      {{ not display_manager_service.stat.exists or
-         'lightdm' in (display_manager_service.stat.lnk_source | default('')) }}
+    install_greetd: "{{ not display_manager_service.stat.exists }}"
     manage_greetd: >-
       {{ not display_manager_service.stat.exists or
-         'lightdm' in (display_manager_service.stat.lnk_source | default('')) or
          'greetd' in (display_manager_service.stat.lnk_source | default('')) }}
 
 - name: Install UI packages (apt)
@@ -213,33 +210,7 @@
   ansible.builtin.dnf:
     name: "{{ ui_packages }}"
 
-- name: Disable the retired LightDM service
-  become: true
-  tags:
-    - become
-    - ui
-  when:
-    - ansible_facts['system'] == 'Linux'
-    - install_greetd
-    - display_manager_service.stat.exists
-  ansible.builtin.systemd_service:
-    name: lightdm
-    enabled: false
-
-- name: Remove the retired LightDM display manager link
-  become: true
-  tags:
-    - become
-    - ui
-  when:
-    - ansible_facts['system'] == 'Linux'
-    - install_greetd
-    - display_manager_service.stat.exists
-  ansible.builtin.file:
-    path: /etc/systemd/system/display-manager.service
-    state: absent
-
-- name: Install greetd when no Wayland display manager exists
+- name: Install greetd when no display manager exists
   become: true
   tags:
     - become

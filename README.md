@@ -1,9 +1,13 @@
 # ansible
 
-Machine provisioning for personal machines (Debian-family, Fedora/RHEL-family,
+Fresh-machine provisioning for personal machines (Debian-family, Fedora/RHEL-family,
 macOS). Installs packages and toolchains, then clones
 [jobrk/dotfiles](https://github.com/jobrk/dotfiles) and stows it. Config files
 live in dotfiles only — this repo owns machine state, never file content.
+
+The playbook installs and configures the desired setup. Migrations and retirement
+of previous setups are handled separately; there are no legacy cleanup tasks or
+tags. Installation still removes its own downloaded installers and build files.
 
 ## Usage
 
@@ -32,8 +36,9 @@ run). Re-run any time; a second run reports `changed=0`.
 
 ## What needs sudo
 
-Only applies to Linux — macOS installs everything through Homebrew as the
-user. A user-space pass runs after system packages on every run; each task
+Linux system packages require sudo. macOS uses Homebrew as the user; the optional
+Window Effects backend also needs administrator authentication (see below).
+A user-space pass runs after system packages on every run; each task
 checks for a command and fills the gap under `~/.local` only when missing.
 `~/.local/bin` is first on PATH, so a fallback shadows a later system
 install; delete the local copy to hand the command back to the distro.
@@ -65,6 +70,9 @@ checksum and extracted under `~/.local/opt`, so it does not depend on FUSE.
 
 Ghostty remains untouched when provisioning a server over SSH because `ui` is
 skipped. Set `UI=1` when provisioning a graphical workstation over SSH.
+
+Linux UI provisioning installs greetd when no display manager is selected. It
+configures an existing greetd installation and preserves other display managers.
 
 ## Over SSH
 
@@ -116,7 +124,7 @@ macOS can't be containerized: `--check` first, then a real run.
 
 ## macOS desktop
 
-The workstation transition and validation limits are recorded in
+The completed workstation transition and validation limits are recorded in
 [docs/desktop-migration.md](docs/desktop-migration.md).
 
 AeroSpace owns tiling, workspaces and shortcuts. [Window Effects](https://github.com/jobrk/window-effects)
@@ -150,36 +158,21 @@ The source is pinned to a full commit in `vars/Darwin.yml` and built in
 LaunchAgent and policy are installed as the desktop user. Config is stowed before
 the watcher is installed. `window_effects_autoload=true` adds one hash-pinned
 sudoers command: the root-owned loader with no arguments. It permits automatic
-recovery after Dock restarts without password prompts. Setting it to false removes
-that rule; the backend then needs manual loading after login or Dock restart.
+recovery after Dock restarts without password prompts. With the default `false`,
+provisioning does not manage that rule; a fresh installation then needs manual
+loading after login or Dock restart.
 
-Installation does not launch either app. Follow the
-[dotfiles migration/rollback guide](https://github.com/jobrk/dotfiles/blob/main/aerospace/README.md)
-to consolidate existing windows, stop/disable yabai and skhd, restart Dock and
-load our backend. AeroSpace needs interactive Accessibility authorization. After
-that first cutover, add `-e desktop_activate=true` to start AeroSpace and the
-watcher during provisioning. Activation refuses if yabai/skhd is running.
-The playbook never changes SIP or restarts Dock automatically.
-
-After accepting the new desktop, archive local yabai/skhd configuration and retire
-the old installation explicitly:
+Open AeroSpace and grant its interactive Accessibility authorization:
 
 ```sh
-ansible-playbook -i inventory.ini main.yml --tags desktop-cleanup --ask-become-pass
+open -a AeroSpace
 ```
 
-Cleanup requires the old daemons to be stopped and AeroSpace plus the appearance
-backend to respond. It removes yabai/skhd packages, current/historical LaunchAgent
-files, Stow links into this checkout, `/Library/ScriptingAdditions/yabai.osax` and
-`/etc/sudoers.d/yabai`. Custom config directories, native Spaces, SIP and Window
-Effects' autoload rule are untouched. This tag is excluded from normal runs.
-`--skip-tags desktop-cleanup-root` runs only the user-owned portion. Use the full
-`desktop-cleanup` tag for privileged cleanup too, so its prerequisites run.
-
-For a backend upgrade: stop the watcher, run `window-effects restore`, provision
-the new pinned revision, restart Dock, and start the watcher again. Replacing the
-on-disk payload does not replace code already resident in Dock. Provision with
-`window_effects_autoload=true` again to refresh the loader hash after upgrades.
+Then repeat the helper installation command with `-e desktop_activate=true` to
+start the watcher. Activation checks for conflicting window managers and leaves
+them untouched. The playbook never changes SIP or restarts Dock automatically.
+See the [dotfiles desktop guide](https://github.com/jobrk/dotfiles/blob/main/aerospace/README.md)
+for controls and the helper's documentation for upgrades or removal.
 
 `tasks/macos-preferences.yml` versions keyboard repeat, immediate Dock reveal/hide,
 menu-bar hiding, stable native Space ordering and native Ctrl+Cmd dragging. Log
