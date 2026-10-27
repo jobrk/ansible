@@ -2,7 +2,8 @@
 
 The active desktop is AeroSpace 0.21.3-Beta with Window Effects v0.1.1 on
 macOS 27.2 (26B123), Apple Silicon. The old daemons and packages are retired.
-Administrator cleanup and final recovery checks are pending below.
+Final recovery checks pass. Only administrator cleanup of two legacy files
+remains pending below.
 
 ## Completed
 
@@ -22,16 +23,19 @@ Administrator cleanup and final recovery checks are pending below.
   Normal provisioning never selects it. Check mode, lint and syntax pass.
 - [x] Install the reviewed CLI, removing the obsolete hardcoded
   `macOS27Tested: false` diagnostic field.
-- [ ] Finish administrator installation of the pinned backend and remove
+- [x] Install and load the pinned backend; verify artifact signatures, checksums,
+  live shadow/opacity changes, restoration and automatic Dock recovery.
+- [ ] Remove the remaining root-owned legacy files:
   `/Library/ScriptingAdditions/yabai.osax` and `/etc/sudoers.d/yabai`.
-- [ ] Repeat app exclusion and AeroSpace exit/restart checks, verify the final
-  backend's live behavior, and confirm provisioning/cleanup idempotence.
+- [x] Repeat app exclusion and AeroSpace exit/restart checks, verify all nine
+  workspace bindings, and restore original workspace placement.
+- [x] Confirm user-side provisioning and cleanup idempotence (`changed=0`,
+  `failed=0`), including check mode with the old packages absent.
 
 The pending administrator command is:
 
 ```sh
-ansible-playbook -i inventory.ini main.yml --tags window-effects,desktop-cleanup --ask-become-pass \
-  -e window_effects_enabled=true -e window_effects_autoload=true
+ansible-playbook -i inventory.ini main.yml --tags desktop-cleanup --ask-become-pass
 ```
 
 ## Ownership and revisions
@@ -40,7 +44,7 @@ ansible-playbook -i inventory.ini main.yml --tags window-effects,desktop-cleanup
 |---|---|---|
 | Window Effects | Source, tests, installer and compatibility evidence | `ba3b65067d27f562d3cf0be8053a3f77bf5cc101` (Ansible pin) |
 | dotfiles | Bindings, appearance policy and Stow packages | `bec9b74` |
-| Ansible | Installation, preferences, lifecycle and explicit cleanup | `4df51bd` |
+| Ansible | Installation, preferences, lifecycle and explicit cleanup | `cd54c8a` |
 
 The original cutover used helper `332189a`, dotfiles `728257d` and Ansible
 `913df41`. The new helper pin includes the source readability cleanup and macOS
@@ -59,6 +63,17 @@ and opacity changes, restoration, closed-window cleanup, watcher shutdown and
 restart, focus dimming between Ghostty and Zen, and automatic Dock recovery.
 All eleven managed keyboard/desktop preferences survived. Both configuration
 files still resolve to the dotfiles checkout.
+
+The final pinned backend was installed and reloaded successfully. App exclusions
+and AeroSpace exit/restart also pass on macOS 27: System Settings floats without
+appearance changes, AeroSpace exit restores the managed windows, and restart
+reconnects the watcher. All nine workspace bindings pass. The final tests restored
+the existing workspace assignments and focus.
+
+A cleanup rerun exposed Homebrew's refusal to resolve already-removed formulae
+from an untrusted legacy tap. The task now filters against `brew list --formula`
+before invoking the Homebrew module. Repeated user-side runs and check mode
+report `changed=0`, `failed=0`; no tap trust settings were changed.
 
 See the [helper compatibility record](https://github.com/jobrk/window-effects/blob/main/COMPATIBILITY.md)
 for the supported scope. The broader workstation CI has an unrelated
